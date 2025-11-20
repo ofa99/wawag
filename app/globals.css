@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 75, 85, 99;
+  /* Gray-600 */
+  --background-start-rgb: 255, 240, 245;
+  /* Lavender Blush */
+  --background-end-rgb: 230, 230, 250;
+  /* Lavender */
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(135deg,
+      #FFB7B2 0%,
+      #FDFD96 50%,
+      #AEC6CF 100%);
+  min-height: 100vh;
+  font-family: 'Outfit', sans-serif;
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-white/60 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl;
+  }
+
+  .btn-bouncy {
+    @apply transition-transform active:scale-95 hover:scale-105;
+  }
+
+  .text-outline {
+    text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.5);
+  }
+}
