@@ -388,6 +388,22 @@ export default function AdminUsersPage() {
                                         className="bg-gray-100 cursor-not-allowed"
                                     />
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-600 mb-1 ml-1">電話號碼</label>
+                                    <Input
+                                        disabled
+                                        value={editingUser.phone || "未填寫"}
+                                        className="bg-gray-100 cursor-not-allowed"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-600 mb-1 ml-1">LINE 帳號</label>
+                                    <Input
+                                        disabled
+                                        value={editingUser.lineId || "未填寫"}
+                                        className="bg-gray-100 cursor-not-allowed"
+                                    />
+                                </div>
                                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
                                     <span className="font-bold text-gray-700">管理員權限</span>
                                     <label className="relative inline-flex items-center cursor-pointer">
