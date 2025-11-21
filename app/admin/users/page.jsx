@@ -143,6 +143,35 @@ export default function AdminUsersPage() {
         setShowEditModal(false);
     };
 
+    const handleExportCSV = () => {
+        const headers = ["UID", "顯示名稱", "Email", "電話號碼", "LINE 帳號", "等級", "點數", "是否為管理員", "建立時間"];
+        const rows = users.map(u => [
+            u.uid,
+            u.name || "",
+            u.email || "",
+            u.phone || "",
+            u.lineId || "",
+            u.level,
+            u.points,
+            u.isAdmin ? "是" : "否",
+            u.createdAt ? new Date(u.createdAt).toLocaleString() : ""
+        ]);
+
+        const csvContent = [
+            headers.join(","),
+            ...rows.map(row => row.map(cell => `"${cell}"`).join(","))
+        ].join("\n");
+
+        const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `users_export_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     const filteredUsers = users.filter(u => {
         if (!u) return false; // Skip if user is null/undefined
         const email = (u.email || "").toLowerCase();
@@ -231,7 +260,7 @@ export default function AdminUsersPage() {
                     <p className="text-gray-500 font-medium">管理您的社群會員</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="secondary" className="text-sm">匯出 CSV</Button>
+                    <Button variant="secondary" className="text-sm" onClick={handleExportCSV}>匯出 CSV</Button>
                     <Button className="text-sm" onClick={() => setShowAddModal(true)}>新增會員</Button>
                 </div>
             </header>
@@ -283,6 +312,12 @@ export default function AdminUsersPage() {
                                                 <div>
                                                     <div className="font-bold text-gray-800">{u.name}</div>
                                                     <div className="text-xs text-gray-400">{u.email}</div>
+                                                    {(u.phone || u.lineId) && (
+                                                        <div className="text-[10px] text-gray-500 mt-0.5 flex gap-2">
+                                                            {u.phone && <span>📱 {u.phone}</span>}
+                                                            {u.lineId && <span>💬 {u.lineId}</span>}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </td>
