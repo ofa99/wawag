@@ -27,14 +27,25 @@ export async function GET(request) {
         const rawUsers = await getCollection("users", token);
 
         const users = rawUsers.map(data => {
+            // The original code calculated 'points' and 'level' based on 'totalPointsEarned' or 'points'.
+            // The new structure spreads 'data' and then explicitly sets 'points' and 'level',
+            // potentially overriding values from 'data' if they are falsy.
+            // It also adds 'isAdmin' and 'createdAt' fields.
+
+            // If data.totalPointsEarned is preferred for points calculation,
+            // it should be calculated before spreading `data` or explicitly set after.
+            // For now, we'll follow the provided snippet's logic for points and level.
             const points = data.totalPointsEarned || data.points || 0;
 
             return {
-                uid: data.id,
-                name: data.displayName || "Unknown",
-                email: data.email || "",
-                points: points,
-                level: getLevel(points),
+                uid: data.id, // Assuming data.id is the correct UID, as 'doc' is not defined.
+                ...data, // Spreads all properties from the Firestore document
+                // Ensure numeric values, potentially overriding values from `...data` if they are falsy
+                points: points, // Use the calculated points
+                level: getLevel(points), // Use the calculated level
+                isAdmin: data.isAdmin || false, // Include isAdmin field
+                // Format dates if they exist
+                createdAt: data.createdAt ? new Date(data.createdAt).toISOString() : null,
                 monthlyGiftClaimedAt: data.monthlyGiftClaimedAt || null,
                 avatar: data.avatar || `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${data.id}`,
                 updatedAt: data.updatedAt || null

@@ -87,6 +87,41 @@ export default function AdminUsersPage() {
         }
     };
 
+    const handleToggleAdmin = async (userId, currentStatus) => {
+        const newStatus = !currentStatus;
+        const toastId = toast.loading("更新權限中...");
+
+        try {
+            const token = await user.getIdToken();
+            const res = await fetch("/api/admin/update-role", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    userId,
+                    isAdmin: newStatus
+                })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                toast.success(`已${newStatus ? "設為" : "移除"}管理員`, { id: toastId });
+                // Update local state
+                setUsers(users.map(u =>
+                    u.uid === userId ? { ...u, isAdmin: newStatus } : u
+                ));
+            } else {
+                toast.error(data.error || "更新失敗", { id: toastId });
+            }
+        } catch (error) {
+            console.error("Update role error:", error);
+            toast.error("更新失敗", { id: toastId });
+        }
+    };
+
     const filteredUsers = users.filter(u =>
         u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -202,6 +237,7 @@ export default function AdminUsersPage() {
                                 <tr>
                                     <th className="p-4">會員</th>
                                     <th className="p-4">等級</th>
+                                    <th className="p-4">權限</th>
                                     <th className="p-4">點數</th>
                                     <th className="p-4">每月禮物</th>
                                     <th className="p-4 text-right">操作</th>
@@ -233,6 +269,20 @@ export default function AdminUsersPage() {
                                             `}>
                                                 LV.{u.level}
                                             </span>
+                                        </td>
+                                        <td className="p-4">
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    className="sr-only peer"
+                                                    checked={u.isAdmin || false}
+                                                    onChange={() => handleToggleAdmin(u.uid, u.isAdmin)}
+                                                />
+                                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wawag-blue"></div>
+                                                <span className="ml-2 text-xs font-medium text-gray-900">
+                                                    {u.isAdmin ? "管理員" : "會員"}
+                                                </span>
+                                            </label>
                                         </td>
                                         <td className="p-4">
                                             <div className="font-mono font-bold text-wawag-pink text-lg">
