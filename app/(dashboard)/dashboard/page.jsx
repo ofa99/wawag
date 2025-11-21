@@ -251,7 +251,18 @@ export default function DashboardPage() {
                     className="mb-6"
                 >
                     <div className="relative bg-gradient-to-r from-pink-400 to-pink-500 rounded-t-3xl p-4 shadow-xl border-4 border-pink-600">
-                        <div className="flex items-center justify-between">
+                        {/* Logout Button */}
+                        <button
+                            onClick={handleLogout}
+                            className="absolute top-2 right-2 z-20 bg-white/20 hover:bg-white/30 text-white p-1.5 rounded-full backdrop-blur-sm transition-all border border-white/30"
+                            title="登出"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                        </button>
+
+                        <div className="flex items-center justify-between mt-4">
                             {/* Avatar */}
                             <Link href="/profile/edit">
                                 <motion.div
@@ -272,8 +283,8 @@ export default function DashboardPage() {
                             {/* Name & Level */}
                             <div className="flex-1 ml-4">
                                 <div className="flex items-center gap-2">
-                                    <h2 className="text-2xl font-black text-white drop-shadow-lg">
-                                        {userData?.displayName || "Guest"}
+                                    <h2 className="text-2xl font-black text-white drop-shadow-lg tracking-wider">
+                                        {userData?.displayName || "訪客"}
                                     </h2>
                                     <Link href="/profile/edit">
                                         <motion.button
@@ -287,8 +298,8 @@ export default function DashboardPage() {
                                         </motion.button>
                                     </Link>
                                 </div>
-                                <div className="inline-block bg-purple-500 text-white px-3 py-1 rounded-full text-xs font-bold mt-1 shadow-md">
-                                    Lv.{level} Member
+                                <div className="inline-block bg-purple-500 text-white px-3 py-1 rounded-full text-xs font-bold mt-1 shadow-md tracking-wide">
+                                    Lv.{level} 會員
                                 </div>
                             </div>
 
@@ -318,10 +329,10 @@ export default function DashboardPage() {
 
                         {/* Balance Display */}
                         <div className="text-center mt-8 mb-6">
-                            <div className="text-sm font-bold text-purple-900 mb-2">TOTAL BALANCE</div>
+                            <div className="text-sm font-bold text-purple-900 mb-2 tracking-widest">目前餘額</div>
                             <div className="relative inline-block">
                                 <div className="bg-yellow-300 rounded-full px-8 py-4 border-6 border-yellow-500 shadow-xl">
-                                    <div className="text-5xl font-black text-yellow-900">{points}</div>
+                                    <div className="text-5xl font-black text-yellow-900 tracking-widest">{points}</div>
                                 </div>
                             </div>
                         </div>
@@ -333,13 +344,13 @@ export default function DashboardPage() {
                                 whileTap={{ scale: 0.95 }}
                                 onClick={handleCheckIn}
                                 disabled={hasCheckedIn}
-                                className={`relative px-6 py-3 rounded-xl font-bold text-white shadow-lg transition-all ${hasCheckedIn
+                                className={`relative px-6 py-3 rounded-xl font-bold text-white shadow-lg transition-all tracking-wide ${hasCheckedIn
                                     ? "bg-gray-400 cursor-not-allowed"
                                     : "bg-gradient-to-b from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700"
                                     }`}
                             >
                                 <span className="relative z-10">
-                                    {hasCheckedIn ? "✓ Checked In" : "🎁 Daily Check-in"}
+                                    {hasCheckedIn ? "✓ 已簽到" : "🎁 每日簽到"}
                                 </span>
                             </motion.button>
 
@@ -347,9 +358,9 @@ export default function DashboardPage() {
                                 whileHover={{ scale: 1.05, y: -2 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => router.push("/scan")}
-                                className="relative px-6 py-3 bg-gradient-to-b from-purple-400 to-purple-600 hover:from-purple-500 hover:to-purple-700 rounded-xl font-bold text-white shadow-lg transition-all"
+                                className="relative px-6 py-3 bg-gradient-to-b from-purple-400 to-purple-600 hover:from-purple-500 hover:to-purple-700 rounded-xl font-bold text-white shadow-lg transition-all tracking-wide"
                             >
-                                <span className="relative z-10">🎯 GRAB PRIZE</span>
+                                <span className="relative z-10">🎯 開始抓寶</span>
                             </motion.button>
                         </div>
                     </div>
@@ -368,7 +379,7 @@ export default function DashboardPage() {
                         <div className="absolute right-4 top-1/2 -translate-y-1/2 text-3xl animate-pulse">⭐</div>
 
                         <div className="text-center mb-2">
-                            <span className="font-black text-yellow-900 text-lg">LEVEL {level}</span>
+                            <span className="font-black text-yellow-900 text-lg tracking-wider">等級 {level}</span>
                         </div>
                         <div className="relative h-8 bg-yellow-200 rounded-full overflow-hidden border-4 border-yellow-700">
                             <motion.div
@@ -380,13 +391,13 @@ export default function DashboardPage() {
                                 <div className="absolute inset-0 bg-white/30 animate-shimmer" />
                             </motion.div>
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-xs font-black text-yellow-900 drop-shadow-lg">
-                                    {progress.current} / {nextLevelPoints} EXP
+                                <span className="text-xs font-black text-yellow-900 drop-shadow-lg tracking-wide">
+                                    {progress.current} / {nextLevelPoints} 經驗值
                                 </span>
                             </div>
                         </div>
-                        <div className="text-center mt-2 text-xs font-bold text-yellow-900">
-                            {progressPercent}% to Level {level + 1} 🎉
+                        <div className="text-center mt-2 text-xs font-bold text-yellow-900 tracking-wide">
+                            距離 Lv.{level + 1} 還差 {100 - progressPercent}% 🎉
                         </div>
                     </div>
                 </motion.div>
@@ -404,8 +415,8 @@ export default function DashboardPage() {
                             <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-yellow-600 via-yellow-700 to-yellow-600" />
                             <div className="text-center">
                                 <div className="text-2xl mb-2">👑</div>
-                                <div className="font-black text-yellow-900 text-lg">VIP UNLOCKED</div>
-                                <div className="text-sm text-yellow-800 mt-1">Enjoy exclusive benefits!</div>
+                                <div className="font-black text-yellow-900 text-lg tracking-wider">VIP 已解鎖</div>
+                                <div className="text-sm text-yellow-800 mt-1 font-bold">享受專屬福利！</div>
                             </div>
                         </div>
                     ) : (
@@ -414,8 +425,8 @@ export default function DashboardPage() {
                             <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(0,0,0,0.1)_10px,rgba(0,0,0,0.1)_20px)]" />
                             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-6xl">🔒</div>
                             <div className="text-center relative z-10">
-                                <div className="font-black text-gray-900 text-lg">VIP Locked 🔒</div>
-                                <div className="text-sm text-gray-800 mt-1">Reach Lv.7 to unlock</div>
+                                <div className="font-black text-gray-900 text-lg tracking-wider">VIP 未解鎖 🔒</div>
+                                <div className="text-sm text-gray-800 mt-1 font-bold">達到 Lv.7 解鎖</div>
                             </div>
                         </div>
                     )}
@@ -442,7 +453,7 @@ export default function DashboardPage() {
 
                             <div className="text-center relative z-10">
                                 <div className="text-5xl mb-2">💰</div>
-                                <div className="font-black text-white text-xl drop-shadow-lg">Transfer</div>
+                                <div className="font-black text-white text-xl drop-shadow-lg tracking-wider">轉帳</div>
                             </div>
 
                             {/* Joystick decoration */}
@@ -451,7 +462,7 @@ export default function DashboardPage() {
                     </motion.div>
 
                     {/* Collect (Scan) Button */}
-                    <Link href="/scanner">
+                    <Link href="/scan">
                         <motion.div
                             whileHover={{ scale: 1.05, y: -4 }}
                             whileTap={{ scale: 0.95 }}
@@ -464,7 +475,7 @@ export default function DashboardPage() {
 
                                 <div className="text-center relative z-10">
                                     <div className="text-5xl mb-2">🎲</div>
-                                    <div className="font-black text-white text-xl drop-shadow-lg">Collect</div>
+                                    <div className="font-black text-white text-xl drop-shadow-lg tracking-wider">收集</div>
                                 </div>
 
                                 {/* Joystick decoration */}
@@ -491,7 +502,7 @@ export default function DashboardPage() {
                                 <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center border-4 border-pink-400 shadow-lg">
                                     <span className="text-3xl">🏠</span>
                                 </div>
-                                <span className="text-xs font-bold text-white mt-1">Home</span>
+                                <span className="text-xs font-bold text-white mt-1 tracking-wide">首頁</span>
                             </motion.div>
                         </Link>
 
@@ -504,7 +515,7 @@ export default function DashboardPage() {
                                 <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center border-4 border-pink-400 shadow-lg">
                                     <span className="text-3xl">👤</span>
                                 </div>
-                                <span className="text-xs font-bold text-white mt-1">Profile</span>
+                                <span className="text-xs font-bold text-white mt-1 tracking-wide">個人檔案</span>
                             </motion.div>
                         </Link>
                     </div>
