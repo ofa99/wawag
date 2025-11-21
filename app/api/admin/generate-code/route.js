@@ -27,7 +27,7 @@ export async function POST(request) {
         }
 
         // 3. Generate Unique Code
-        const codeId = `WAWAG-${crypto.randomUUID().split('-')[0].toUpperCase()}`;
+        const codeId = `WAWAG-${globalThis.crypto.randomUUID().split('-')[0].toUpperCase()}`;
 
         // 4. Save to Firestore
         const codeData = {
