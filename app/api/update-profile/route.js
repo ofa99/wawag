@@ -19,7 +19,10 @@ export async function POST(request) {
 
         const { displayName, photoURL, phone, lineId } = await request.json();
 
-        console.log("Update profile request:", { displayName, photoURL, phone, lineId, uid: userInfo.uid });
+        // verifyIdToken returns { localId, email, ... }
+        const uid = userInfo.uid || userInfo.localId;
+
+        console.log("Update profile request:", { displayName, photoURL, phone, lineId, uid, userInfo });
 
         if (!displayName) {
             return NextResponse.json({ error: "顯示名稱為必填" }, { status: 400 });
@@ -40,10 +43,12 @@ export async function POST(request) {
         if (lineId !== undefined) updateData.lineId = lineId;
 
         console.log("Updating document with data:", updateData);
+        console.log("Target UID:", uid);
 
-        await updateDocument("users", userInfo.uid, updateData, token);
+        const result = await updateDocument("users", uid, updateData, token);
 
-        console.log("Profile updated successfully for user:", userInfo.uid);
+        console.log("Update result:", result);
+        console.log("Profile updated successfully for user:", uid);
 
         return NextResponse.json({ success: true });
 
