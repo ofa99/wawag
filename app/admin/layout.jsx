@@ -1,10 +1,11 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const adminNavItems = [
     { name: "會員管理", href: "/admin/users", icon: "👥" },
@@ -18,33 +19,63 @@ export default function AdminLayout({ children }) {
     const pathname = usePathname();
     const { user, loading } = useAuth();
     const router = useRouter();
+    const [isAuthorized, setIsAuthorized] = useState(false);
+    const [checking, setChecking] = useState(true);
 
-    // Hardcoded for client-side check
+    // Hardcoded for client-side check (Fallback)
     const ADMIN_EMAILS = ["admin@example.com", "allenlu@example.com"];
 
     useEffect(() => {
-        if (!loading) {
+        const checkAdminStatus = async () => {
+            if (loading) return;
+
             if (!user) {
                 if (pathname !== "/admin/login") {
                     router.push("/admin/login");
+                } else {
+                    setChecking(false);
                 }
-            } else {
-                if (!ADMIN_EMAILS.includes(user.email)) {
+                return;
+            }
+
+            // 1. Check Hardcoded List first (Fastest)
+            if (ADMIN_EMAILS.includes(user.email)) {
+                setIsAuthorized(true);
+                setChecking(false);
+                return;
+            }
+
+            // 2. Check Firestore Profile
+            try {
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+
+                if (userDoc.exists() && userDoc.data().isAdmin === true) {
+                    setIsAuthorized(true);
+                } else {
                     toast.error("未經授權的存取");
                     router.push("/dashboard");
                 }
+            } catch (e) {
+                console.error("Admin Check Error:", e);
+                toast.error("驗證失敗");
+                router.push("/dashboard");
+            } finally {
+                setChecking(false);
             }
-        }
+        };
+
+        checkAdminStatus();
     }, [user, loading, pathname, router]);
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center">載入後台...</div>;
+    if (loading || checking) return <div className="min-h-screen flex items-center justify-center">載入後台...</div>;
 
     // If on login page, render without sidebar
     if (pathname === "/admin/login") {
         return children;
     }
 
-    if (!user || !ADMIN_EMAILS.includes(user.email)) return null;
+    if (!isAuthorized) return null;
 
     return (
         <div className="min-h-screen bg-wawag-cream flex flex-col md:flex-row">

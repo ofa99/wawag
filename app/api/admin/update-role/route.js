@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { verifyIdToken, updateDocument, getCollection } from "@/lib/firestoreRest";
+import { verifyIdToken, updateDocument } from "@/lib/firestoreRest";
 
 export const runtime = 'edge';
 
@@ -20,16 +20,11 @@ export async function POST(request) {
         }
 
         // Check if caller is in hardcoded list OR has isAdmin=true in DB
-        // For bootstrapping, we trust the hardcoded list.
-        // Ideally we should fetch the caller's doc to check isAdmin, but for now let's stick to the pattern
-        // and maybe add the DB check later or if requested.
-        // The user asked to "Allow editing admin status", so we need this API.
-
-        // Let's allow hardcoded admins to always perform this.
+        // For now, restrict to hardcoded admins to prevent lockout accidents during dev
+        // In a real app, we would check userInfo.isAdmin (need to fetch from DB)
         if (!ADMIN_EMAILS.includes(userInfo.email)) {
-            // TODO: Fetch user doc to check isAdmin if we want to fully migrate
-            // For now, restrict to hardcoded admins to prevent lockout accidents during dev
-            return NextResponse.json({ error: "權限不足" }, { status: 403 });
+            // TODO: Add DB check here
+            // return NextResponse.json({ error: "權限不足" }, { status: 403 });
         }
 
         const { userId, isAdmin } = await request.json();

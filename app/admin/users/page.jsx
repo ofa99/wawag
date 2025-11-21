@@ -43,6 +43,8 @@ export default function AdminUsersPage() {
     }, [user]);
 
     const [showAddModal, setShowAddModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingUser, setEditingUser] = useState(null);
     const [newMember, setNewMember] = useState({ name: "", email: "", password: "" });
 
     const handleAddMember = async (e) => {
@@ -120,6 +122,25 @@ export default function AdminUsersPage() {
             console.error("Update role error:", error);
             toast.error("更新失敗", { id: toastId });
         }
+    };
+
+    const handleEditUser = (user) => {
+        setEditingUser(user);
+        setShowEditModal(true);
+    };
+
+    const handleSaveEdit = async (e) => {
+        e.preventDefault();
+        // For now, we only support toggling admin in edit modal as per request
+        // But we can easily extend to name editing if API supports it.
+        // Since update-role only updates role, let's just use that for now.
+        // If we want to update name, we need another API or update update-role to be generic update-user.
+        // Let's stick to the requested "promote to admin" feature.
+
+        if (editingUser.isAdmin !== editingUser.originalIsAdmin) {
+            await handleToggleAdmin(editingUser.uid, !editingUser.isAdmin);
+        }
+        setShowEditModal(false);
     };
 
     const filteredUsers = users.filter(u =>
@@ -306,7 +327,11 @@ export default function AdminUsersPage() {
                                             )}
                                         </td>
                                         <td className="p-4 text-right">
-                                            <Button variant="ghost" className="text-xs h-8 px-3 text-gray-400 hover:text-wawag-blue hover:bg-blue-50">
+                                            <Button
+                                                variant="ghost"
+                                                className="text-xs h-8 px-3 text-gray-400 hover:text-wawag-blue hover:bg-blue-50"
+                                                onClick={() => handleEditUser({ ...u, originalIsAdmin: u.isAdmin })}
+                                            >
                                                 編輯
                                             </Button>
                                         </td>
@@ -327,6 +352,75 @@ export default function AdminUsersPage() {
                     顯示 {filteredUsers.length} 位會員
                 </div>
             </Card>
+
+            {/* Edit User Modal */}
+            <AnimatePresence>
+                {showEditModal && editingUser && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+                        onClick={() => setShowEditModal(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <h2 className="text-2xl font-black text-wawag-dark mb-4">編輯會員 ✏️</h2>
+                            <form onSubmit={handleSaveEdit} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-600 mb-1 ml-1">顯示名稱</label>
+                                    <Input
+                                        disabled
+                                        value={editingUser.name}
+                                        className="bg-gray-100 cursor-not-allowed"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-600 mb-1 ml-1">Email</label>
+                                    <Input
+                                        disabled
+                                        value={editingUser.email}
+                                        className="bg-gray-100 cursor-not-allowed"
+                                    />
+                                </div>
+                                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                                    <span className="font-bold text-gray-700">管理員權限</span>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={editingUser.isAdmin || false}
+                                            onChange={(e) => setEditingUser({ ...editingUser, isAdmin: e.target.checked })}
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wawag-blue"></div>
+                                    </label>
+                                </div>
+                                <div className="flex gap-3 mt-6">
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        className="flex-1"
+                                        onClick={() => setShowEditModal(false)}
+                                    >
+                                        取消
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        className="flex-1 bg-wawag-blue text-white hover:bg-blue-400"
+                                    >
+                                        儲存變更
+                                    </Button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
