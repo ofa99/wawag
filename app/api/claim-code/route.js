@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
+import { db } from "@/lib/firebase";
+import { collection, query, where, getDocs, updateDoc, doc, increment, serverTimestamp, runTransaction } from "firebase/firestore";
 
 export const runtime = 'edge';
 
-import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, updateDoc, doc, increment, serverTimestamp, runTransaction } from "firebase/firestore";
 
 export async function POST(request) {
     try {

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
+import { db } from "@/lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 export const runtime = 'edge';
 
-import { db } from "@/lib/firebase";
-import { doc, setDoc } from "firebase/firestore";
 
 const ADMIN_EMAILS = ["admin@example.com", "allenlu@example.com"];
 

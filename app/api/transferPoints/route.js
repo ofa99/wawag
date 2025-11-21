@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
+import { db } from "@/lib/firebase";
+import { doc, runTransaction, collection, query, where, getDocs } from "firebase/firestore";
 
 export const runtime = 'edge';
 
-import { db } from "@/lib/firebase";
-import { doc, runTransaction, collection, query, where, getDocs } from "firebase/firestore";
 
 export async function POST(request) {
     const { fromUid, toEmail, amount } = await request.json();

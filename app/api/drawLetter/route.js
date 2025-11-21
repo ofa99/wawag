@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
+import { db } from "@/lib/firebase";
+import { doc, runTransaction } from "firebase/firestore";
 
 export const runtime = 'edge';
 
-import { db } from "@/lib/firebase";
-import { doc, runTransaction } from "firebase/firestore";
 
 const LETTERS = ["W", "A", "G"];
 const COST = 50;

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-
-export const runtime = 'edge';
-
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query } from "firebase/firestore";
 import { getLevel } from "@/utils/calcLevel";
+
+export const runtime = 'edge';
+
 
 // Placeholder Admin List - In production, use custom claims or a database role field
 const ADMIN_EMAILS = ["admin@example.com", "allenlu@example.com"];

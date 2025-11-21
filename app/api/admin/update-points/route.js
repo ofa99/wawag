@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
+import { db } from "@/lib/firebase";
+import { doc, updateDoc, increment } from "firebase/firestore";
 
 export const runtime = 'edge';
 
-import { db } from "@/lib/firebase";
-import { doc, updateDoc, increment } from "firebase/firestore";
 
 // Placeholder Admin List
 const ADMIN_EMAILS = ["admin@example.com", "allenlu@example.com"];
