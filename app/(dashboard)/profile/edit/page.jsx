@@ -28,6 +28,12 @@ export default function EditProfilePage() {
     const [selectedImage, setSelectedImage] = useState(null);
     const [previewUrl, setPreviewUrl] = useState("");
 
+    // Edit mode for individual fields
+    const [editMode, setEditMode] = useState({
+        phone: false,
+        lineId: false
+    });
+
     useEffect(() => {
         const fetchProfile = async () => {
             if (!user?.uid) return;
@@ -43,6 +49,12 @@ export default function EditProfilePage() {
                         lineId: data.lineId || ""
                     });
                     setPreviewUrl(data.photoURL || data.avatar || "");
+
+                    // Set edit mode to false if data exists
+                    setEditMode({
+                        phone: !data.phone,
+                        lineId: !data.lineId
+                    });
                 }
             } catch (error) {
                 console.error("Error fetching profile:", error);
@@ -58,6 +70,14 @@ export default function EditProfilePage() {
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            // Check file size (2MB = 2 * 1024 * 1024 bytes)
+            const maxSize = 2 * 1024 * 1024;
+            if (file.size > maxSize) {
+                toast.error("圖片大小不能超過 2MB！請選擇較小的圖片。");
+                e.target.value = ""; // Clear the input
+                return;
+            }
+
             setSelectedImage(file);
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -109,7 +129,15 @@ export default function EditProfilePage() {
 
             if (res.ok) {
                 toast.success("個人資料已更新！");
-                router.push("/dashboard");
+                // Reset edit mode
+                setEditMode({
+                    phone: false,
+                    lineId: false
+                });
+                // Redirect after a short delay to show the success message
+                setTimeout(() => {
+                    router.push("/dashboard");
+                }, 1000);
             } else {
                 toast.error(data.error || "更新失敗");
             }
@@ -181,7 +209,7 @@ export default function EditProfilePage() {
                                 onChange={handleImageChange}
                                 className="hidden"
                             />
-                            <p className="text-xs text-gray-400 mt-2">點擊頭像更換照片</p>
+                            <p className="text-xs text-gray-400 mt-2">點擊頭像更換照片（限 2MB 以內）</p>
                         </div>
 
                         {/* Display Name */}
@@ -197,22 +225,52 @@ export default function EditProfilePage() {
 
                         {/* Phone */}
                         <div>
-                            <label className="block text-sm font-bold text-gray-600 mb-1 ml-1">電話號碼</label>
+                            <div className="flex items-center justify-between mb-1 ml-1">
+                                <label className="block text-sm font-bold text-gray-600">電話號碼</label>
+                                {!editMode.phone && profileData.phone && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditMode({ ...editMode, phone: true })}
+                                        className="text-wawag-blue hover:text-blue-600 transition-colors"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                        </svg>
+                                    </button>
+                                )}
+                            </div>
                             <Input
                                 type="tel"
                                 value={profileData.phone}
                                 onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
                                 placeholder="0912-345-678"
+                                disabled={!editMode.phone && profileData.phone}
+                                className={!editMode.phone && profileData.phone ? "bg-gray-100 cursor-not-allowed" : ""}
                             />
                         </div>
 
                         {/* LINE ID */}
                         <div>
-                            <label className="block text-sm font-bold text-gray-600 mb-1 ml-1">LINE 帳號</label>
+                            <div className="flex items-center justify-between mb-1 ml-1">
+                                <label className="block text-sm font-bold text-gray-600">LINE 帳號</label>
+                                {!editMode.lineId && profileData.lineId && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditMode({ ...editMode, lineId: true })}
+                                        className="text-wawag-blue hover:text-blue-600 transition-colors"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                        </svg>
+                                    </button>
+                                )}
+                            </div>
                             <Input
                                 value={profileData.lineId}
                                 onChange={(e) => setProfileData({ ...profileData, lineId: e.target.value })}
                                 placeholder="your_line_id"
+                                disabled={!editMode.lineId && profileData.lineId}
+                                className={!editMode.lineId && profileData.lineId ? "bg-gray-100 cursor-not-allowed" : ""}
                             />
                         </div>
 
