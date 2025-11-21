@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+
+export const runtime = 'edge';
+
 import { adminDb } from "@/lib/firebase-admin"; // Assuming we have admin SDK or using client SDK with rules? 
 // Wait, the prompt says "Do not modify firebase init". 
 // If I don't have admin SDK, I must use the client SDK in the API route? 

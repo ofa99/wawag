@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+
+export const runtime = 'edge';
+
 import { adminAuth, adminDb } from "@/lib/firebase-admin";
 
 const ADMIN_EMAILS = ["admin@example.com", "allenlu@example.com"];

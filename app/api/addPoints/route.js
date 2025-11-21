@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+
+export const runtime = 'edge';
+
 import { addPoints } from "@/lib/points";
 
 export async function POST(request) {

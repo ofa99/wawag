@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+
+export const runtime = 'edge';
+
 import { db } from "@/lib/firebase";
 import { doc, runTransaction } from "firebase/firestore";
 
