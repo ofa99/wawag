@@ -29,7 +29,11 @@ export async function POST(request) {
             updatedAt: new Date()
         };
 
-        if (photoURL) updateData.photoURL = photoURL;
+        // Update both photoURL and avatar for compatibility
+        if (photoURL) {
+            updateData.photoURL = photoURL;
+            updateData.avatar = photoURL; // Also update avatar field
+        }
         if (phone !== undefined) updateData.phone = phone;
         if (lineId !== undefined) updateData.lineId = lineId;
 

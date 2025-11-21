@@ -3,7 +3,7 @@ import { verifyIdToken, updateDocument, getCollection } from "@/lib/firestoreRes
 
 export const runtime = 'edge';
 
-const ADMIN_EMAILS = ["admin@example.com", "allenlu@example.com"];
+const ADMIN_EMAILS = ["abc@gmail.com", "allenlu@example.com"];
 
 export async function POST(request) {
     try {

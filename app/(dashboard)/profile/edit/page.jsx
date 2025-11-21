@@ -156,11 +156,17 @@ export default function EditProfilePage() {
                                         className="w-full h-full object-cover"
                                     />
                                 </motion.div>
-                                <div className="absolute bottom-0 right-0 bg-wawag-blue text-white p-2 rounded-full shadow-lg">
+                                <motion.button
+                                    type="button"
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={() => document.getElementById('avatar-upload').click()}
+                                    className="absolute bottom-0 right-0 bg-wawag-blue text-white p-2 rounded-full shadow-lg cursor-pointer hover:bg-blue-400 transition-colors"
+                                >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                         <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                                     </svg>
-                                </div>
+                                </motion.button>
                             </div>
                             <input
                                 id="avatar-upload"

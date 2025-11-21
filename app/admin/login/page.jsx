@@ -9,7 +9,7 @@ import { toast } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 
 // Hardcoded for client-side check, matching API
-const ADMIN_EMAILS = ["admin@example.com", "allenlu@example.com"];
+const ADMIN_EMAILS = ["abc@gmail.com", "allenlu@example.com"];
 
 export default function AdminLoginPage() {
     const [email, setEmail] = useState("");

@@ -23,7 +23,7 @@ export default function AdminLayout({ children }) {
     const [checking, setChecking] = useState(true);
 
     // Hardcoded for client-side check (Fallback)
-    const ADMIN_EMAILS = ["admin@example.com", "allenlu@example.com"];
+    const ADMIN_EMAILS = ["abc@gmail.com", "allenlu@example.com"];
 
     useEffect(() => {
         const checkAdminStatus = async () => {
