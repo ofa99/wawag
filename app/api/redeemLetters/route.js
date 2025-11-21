@@ -16,12 +16,12 @@ export async function POST(request) {
             const letterRef = doc(db, "userLetters", uid);
             const letterDoc = await transaction.get(letterRef);
 
-            if (!letterDoc.exists()) throw "No letters found";
+            if (!letterDoc.exists()) throw "找不到字母";
             const letters = letterDoc.data();
 
             // Check requirements
             if ((letters.W || 0) < 2 || (letters.A || 0) < 2 || (letters.G || 0) < 1) {
-                throw "Not enough letters for WAWAG";
+                throw "字母不足以組成 WAWAG";
             }
 
             // Deduct letters

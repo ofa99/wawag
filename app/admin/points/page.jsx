@@ -28,7 +28,7 @@ export default function AdminPointsPage() {
                 setUsers(data.users || []);
             } catch (error) {
                 console.error(error);
-                toast.error("Failed to load users");
+                toast.error("載入使用者失敗");
             } finally {
                 setLoading(false);
             }
@@ -65,11 +65,11 @@ export default function AdminPointsPage() {
 
             if (!res.ok) throw new Error("Update failed");
 
-            const action = amount > 0 ? "Added" : "Removed";
-            toast.success(`${action} ${Math.abs(amount)} points for ${targetUser.name}`);
+            const action = amount > 0 ? "已增加" : "已扣除";
+            toast.success(`${action} ${Math.abs(amount)} 點數給 ${targetUser.name}`);
 
         } catch (error) {
-            toast.error("Failed to update points");
+            toast.error("更新點數失敗");
             setUsers(previousUsers); // Rollback
         }
     };
@@ -83,8 +83,8 @@ export default function AdminPointsPage() {
         <div className="space-y-6">
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="text-3xl font-black text-wawag-dark">Points Log 📊</h2>
-                    <p className="text-gray-500 font-medium">Manage user points manually</p>
+                    <h2 className="text-3xl font-black text-wawag-dark">點數紀錄 📊</h2>
+                    <p className="text-gray-500 font-medium">手動管理使用者點數</p>
                 </div>
             </header>
 
@@ -92,7 +92,7 @@ export default function AdminPointsPage() {
                 <div className="flex gap-4 mb-6">
                     <div className="flex-1">
                         <Input
-                            placeholder="Search by name or email..."
+                            placeholder="搜尋姓名或 Email..."
                             className="bg-white border-gray-100"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -104,17 +104,17 @@ export default function AdminPointsPage() {
                 <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-white shadow-sm">
                     {loading ? (
                         <div className="p-12 text-center text-gray-400">
-                            Loading points data... ⏳
+                            載入點數資料... ⏳
                         </div>
                     ) : (
                         <table className="w-full text-left min-w-[800px]">
                             <thead className="bg-wawag-cream text-gray-500 text-xs uppercase tracking-wider font-bold">
                                 <tr>
-                                    <th className="p-4">Member</th>
-                                    <th className="p-4">Current Points</th>
-                                    <th className="p-4 text-center">Add Points</th>
-                                    <th className="p-4 text-center">Remove Points</th>
-                                    <th className="p-4 text-right">Last Updated</th>
+                                    <th className="p-4">會員</th>
+                                    <th className="p-4">目前點數</th>
+                                    <th className="p-4 text-center">增加點數</th>
+                                    <th className="p-4 text-center">扣除點數</th>
+                                    <th className="p-4 text-right">最後更新</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -189,7 +189,7 @@ export default function AdminPointsPage() {
 
                     {!loading && filteredUsers.length === 0 && (
                         <div className="p-12 text-center text-gray-400">
-                            No members found matching "{searchTerm}"
+                            找不到符合 "{searchTerm}" 的會員
                         </div>
                     )}
                 </div>

@@ -15,18 +15,18 @@ export async function DELETE(request) {
         const id = searchParams.get("id");
 
         if (!adminEmail || !ADMIN_EMAILS.includes(adminEmail)) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            return NextResponse.json({ error: "未經授權" }, { status: 401 });
         }
 
         if (!id) {
-            return NextResponse.json({ error: "Missing code ID" }, { status: 400 });
+            return NextResponse.json({ error: "缺少代碼 ID" }, { status: 400 });
         }
 
         const codeRef = doc(db, "codes", id);
         const codeSnap = await getDoc(codeRef);
 
         if (!codeSnap.exists()) {
-            return NextResponse.json({ error: "Code not found" }, { status: 404 });
+            return NextResponse.json({ error: "找不到代碼" }, { status: 404 });
         }
 
         await deleteDoc(codeRef);
@@ -35,6 +35,6 @@ export async function DELETE(request) {
 
     } catch (error) {
         console.error("Delete Code Error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ error: "伺服器內部錯誤" }, { status: 500 });
     }
 }

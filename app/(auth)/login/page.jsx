@@ -26,10 +26,10 @@ export default function LoginPage() {
         e.preventDefault();
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            toast.success("Welcome back! 🌸");
+            toast.success("歡迎回來！🌸");
             router.push("/dashboard");
         } catch (error) {
-            toast.error("Login failed: " + error.message);
+            toast.error("登入失敗: " + error.message);
         }
     };
 
@@ -37,10 +37,10 @@ export default function LoginPage() {
         const provider = new GoogleAuthProvider();
         try {
             await signInWithPopup(auth, provider);
-            toast.success("Welcome! ✨");
+            toast.success("歡迎！✨");
             router.push("/dashboard");
         } catch (error) {
-            toast.error("Google login failed");
+            toast.error("Google 登入失敗");
         }
     };
 
@@ -77,13 +77,13 @@ export default function LoginPage() {
                         >
                             🐰
                         </motion.div>
-                        <h1 className="text-3xl font-black text-wawag-dark tracking-tight">Welcome Back!</h1>
-                        <p className="text-wawag-purple font-medium">Login to check your points</p>
+                        <h1 className="text-3xl font-black text-wawag-dark tracking-tight">歡迎回來！</h1>
+                        <p className="text-wawag-purple font-medium">登入查看您的點數</p>
                     </div>
 
                     <form onSubmit={handleLogin} className="space-y-5">
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-wawag-pink ml-2 uppercase tracking-wider">Email</label>
+                            <label className="text-xs font-bold text-wawag-pink ml-2 uppercase tracking-wider">電子郵件</label>
                             <input
                                 type="email"
                                 placeholder="bunny@wawag.com"
@@ -94,7 +94,7 @@ export default function LoginPage() {
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-wawag-pink ml-2 uppercase tracking-wider">Password</label>
+                            <label className="text-xs font-bold text-wawag-pink ml-2 uppercase tracking-wider">密碼</label>
                             <input
                                 type="password"
                                 placeholder="••••••••"
@@ -105,7 +105,7 @@ export default function LoginPage() {
                             />
                         </div>
                         <Button type="submit" className="w-full py-4 text-lg font-black rounded-2xl bg-wawag-pink hover:bg-wawag-pink/90 text-white shadow-lg shadow-wawag-pink/30 transform transition hover:-translate-y-1">
-                            Login
+                            登入
                         </Button>
                     </form>
 
@@ -114,7 +114,7 @@ export default function LoginPage() {
                             <span className="w-full border-t-2 border-dashed border-gray-200" />
                         </div>
                         <div className="relative flex justify-center text-xs font-bold uppercase tracking-widest">
-                            <span className="bg-white px-4 text-gray-400">Or</span>
+                            <span className="bg-white px-4 text-gray-400">或</span>
                         </div>
                     </div>
 
@@ -124,13 +124,13 @@ export default function LoginPage() {
                         className="w-full py-4 rounded-2xl border-2 border-gray-100 hover:bg-gray-50 hover:border-gray-200 text-gray-600 font-bold"
                         onClick={handleGoogleLogin}
                     >
-                        <span className="mr-2">🌈</span> Continue with Google
+                        <span className="mr-2">🌈</span> 使用 Google 繼續
                     </Button>
 
                     <p className="text-center text-sm font-medium text-gray-400">
-                        New here?{" "}
+                        新朋友？{" "}
                         <Link href="/register" className="text-wawag-pink font-black hover:underline decoration-2 underline-offset-4">
-                            Create Account
+                            建立帳戶
                         </Link>
                     </p>
                 </Card>

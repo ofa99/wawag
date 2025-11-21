@@ -15,7 +15,7 @@ export async function POST(request) {
         const adminEmail = request.headers.get("x-admin-email");
 
         if (!adminEmail || !ADMIN_EMAILS.includes(adminEmail)) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            return NextResponse.json({ error: "未經授權" }, { status: 401 });
         }
 
         // 2. Parse Body
@@ -23,7 +23,7 @@ export async function POST(request) {
         const { points } = body;
 
         if (!points || typeof points !== 'number' || points <= 0) {
-            return NextResponse.json({ error: "Invalid points value" }, { status: 400 });
+            return NextResponse.json({ error: "無效的點數數值" }, { status: 400 });
         }
 
         // 3. Generate Unique Code
@@ -49,6 +49,6 @@ export async function POST(request) {
 
     } catch (error) {
         console.error("Generate Code Error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ error: "伺服器內部錯誤" }, { status: 500 });
     }
 }

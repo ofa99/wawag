@@ -41,14 +41,14 @@ export default function ScanPage() {
                 const data = await res.json();
 
                 if (data.success) {
-                    toast.success(`Yay! +${data.points} Points! 🎉`);
+                    toast.success(`耶！+${data.points} 點！🎉`);
                     // Optional: Play sound or show modal
                 } else {
-                    toast.error(data.message || "Invalid Code 😢");
+                    toast.error(data.message || "無效的代碼 😢");
                 }
             } catch (error) {
                 console.error(error);
-                toast.error("Redemption failed");
+                toast.error("兌換失敗");
             } finally {
                 setIsProcessing(false);
             }
@@ -66,8 +66,8 @@ export default function ScanPage() {
     return (
         <div className="p-4 flex flex-col items-center space-y-6">
             <div className="text-center space-y-2">
-                <h1 className="text-2xl font-bold text-wawag-blue">Scan QR Code</h1>
-                <p className="text-gray-500">Point your camera at the machine's QR code</p>
+                <h1 className="text-2xl font-bold text-wawag-blue">掃描 QR Code</h1>
+                <p className="text-gray-500">將鏡頭對準機台的 QR Code</p>
             </div>
 
             <Card className="w-full max-w-md overflow-hidden bg-black/5">
@@ -76,7 +76,7 @@ export default function ScanPage() {
 
             {scanResult && (
                 <div className="text-center p-4 bg-green-100 text-green-700 rounded-xl">
-                    Scanned: {scanResult}
+                    已掃描: {scanResult}
                 </div>
             )}
         </div>

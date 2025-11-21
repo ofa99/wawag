@@ -18,8 +18,8 @@ export async function POST(request) {
             const userRef = doc(db, "users", uid);
             const userDoc = await transaction.get(userRef);
 
-            if (!userDoc.exists()) throw "User not found";
-            if ((userDoc.data().points || 0) < COST) throw "Not enough points";
+            if (!userDoc.exists()) throw "找不到使用者";
+            if ((userDoc.data().points || 0) < COST) throw "點數不足";
 
             // Deduct points
             transaction.update(userRef, {

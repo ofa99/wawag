@@ -11,7 +11,7 @@ export async function POST(request) {
         const { codeId, uid } = body;
 
         if (!codeId || !uid) {
-            return NextResponse.json({ success: false, message: "Missing codeId or uid" }, { status: 400 });
+            return NextResponse.json({ success: false, message: "缺少代碼 ID 或使用者 ID" }, { status: 400 });
         }
 
         // Use Transaction for atomicity
@@ -22,7 +22,7 @@ export async function POST(request) {
             const querySnapshot = await getDocs(q);
 
             if (querySnapshot.empty) {
-                throw new Error("Invalid code");
+                throw new Error("無效的代碼");
             }
 
             const codeDoc = querySnapshot.docs[0];
@@ -30,7 +30,7 @@ export async function POST(request) {
 
             // 2. Check if used
             if (codeData.isUsed) {
-                throw new Error("Code already used");
+                throw new Error("代碼已使用");
             }
 
             // 3. Update User Points

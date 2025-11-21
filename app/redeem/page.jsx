@@ -14,7 +14,7 @@ function RedeemContent() {
     const { user, loading } = useAuth();
 
     const [status, setStatus] = useState("verifying"); // verifying, success, error
-    const [message, setMessage] = useState("Verifying code...");
+    const [message, setMessage] = useState("驗證代碼中...");
     const [points, setPoints] = useState(0);
 
     useEffect(() => {
@@ -28,7 +28,7 @@ function RedeemContent() {
 
         if (!codeId) {
             setStatus("error");
-            setMessage("Invalid Link: Missing Code ID");
+            setMessage("無效連結：缺少代碼 ID");
             return;
         }
 
@@ -45,14 +45,14 @@ function RedeemContent() {
                 if (data.success) {
                     setStatus("success");
                     setPoints(data.points);
-                    toast.success(`Yay! +${data.points} Points! 🎉`);
+                    toast.success(`太棒了！獲得 +${data.points} 點！🎉`);
                 } else {
                     setStatus("error");
-                    setMessage(data.message || "Failed to redeem code");
+                    setMessage(data.message || "兌換代碼失敗");
                 }
             } catch (error) {
                 setStatus("error");
-                setMessage("Something went wrong. Please try again.");
+                setMessage("發生錯誤，請稍後再試。");
             }
         };
 
@@ -70,7 +70,7 @@ function RedeemContent() {
                     {status === "verifying" && (
                         <div className="space-y-4">
                             <div className="animate-spin text-4xl">⏳</div>
-                            <h2 className="text-xl font-bold text-gray-500">Verifying Code...</h2>
+                            <h2 className="text-xl font-bold text-gray-500">驗證代碼中...</h2>
                         </div>
                     )}
 
@@ -84,16 +84,16 @@ function RedeemContent() {
                                 🎉
                             </motion.div>
                             <div>
-                                <h1 className="text-3xl font-black text-wawag-pink mb-2">Success!</h1>
+                                <h1 className="text-3xl font-black text-wawag-pink mb-2">兌換成功！</h1>
                                 <p className="text-gray-600 font-medium">
-                                    You've collected <span className="text-wawag-purple font-bold text-xl">+{points} Points</span>
+                                    您已獲得 <span className="text-wawag-purple font-bold text-xl">+{points} 點</span>
                                 </p>
                             </div>
                             <Button
                                 onClick={() => router.push("/dashboard")}
                                 className="w-full bg-wawag-green text-white hover:bg-green-400 shadow-lg shadow-green-200"
                             >
-                                Go to Dashboard 🏠
+                                回首頁 🏠
                             </Button>
                         </div>
                     )}
@@ -108,7 +108,7 @@ function RedeemContent() {
                                 🥺
                             </motion.div>
                             <div>
-                                <h1 className="text-3xl font-black text-gray-400 mb-2">Oops!</h1>
+                                <h1 className="text-3xl font-black text-gray-400 mb-2">糟糕！</h1>
                                 <p className="text-red-400 font-bold bg-red-50 py-2 px-4 rounded-xl inline-block">
                                     {message}
                                 </p>
@@ -117,7 +117,7 @@ function RedeemContent() {
                                 onClick={() => router.push("/dashboard")}
                                 className="w-full bg-gray-400 text-white hover:bg-gray-500"
                             >
-                                Back Home 🏠
+                                回首頁 🏠
                             </Button>
                         </div>
                     )}

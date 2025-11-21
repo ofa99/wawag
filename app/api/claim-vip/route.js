@@ -11,14 +11,14 @@ export async function POST(request) {
         const { uid } = await request.json();
 
         if (!uid) {
-            return NextResponse.json({ error: "User ID required" }, { status: 400 });
+            return NextResponse.json({ error: "需要使用者 ID" }, { status: 400 });
         }
 
         const userRef = doc(db, "users", uid);
         const userSnap = await getDoc(userRef);
 
         if (!userSnap.exists()) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
+            return NextResponse.json({ error: "找不到使用者" }, { status: 404 });
         }
 
         const userData = userSnap.data();
@@ -26,7 +26,7 @@ export async function POST(request) {
         const level = getLevel(currentPoints);
 
         if (level < 7) {
-            return NextResponse.json({ error: "VIP level not reached" }, { status: 403 });
+            return NextResponse.json({ error: "未達到 VIP 等級" }, { status: 403 });
         }
 
         // Check if already claimed this month
@@ -35,7 +35,7 @@ export async function POST(request) {
             const lastDate = lastClaimed.toDate();
             const now = new Date();
             if (lastDate.getMonth() === now.getMonth() && lastDate.getFullYear() === now.getFullYear()) {
-                return NextResponse.json({ error: "Already claimed this month" }, { status: 400 });
+                return NextResponse.json({ error: "本月已領取" }, { status: 400 });
             }
         }
 
@@ -61,6 +61,6 @@ export async function POST(request) {
 
     } catch (error) {
         console.error("VIP Claim Error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ error: "伺服器內部錯誤" }, { status: 500 });
     }
 }

@@ -9,7 +9,7 @@ export async function POST(request) {
     const { fromUid, toEmail, amount } = await request.json();
 
     if (!fromUid || !toEmail || !amount || amount < 10) {
-        return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+        return NextResponse.json({ error: "無效的請求" }, { status: 400 });
     }
 
     try {
@@ -17,17 +17,17 @@ export async function POST(request) {
             // 1. Get Sender
             const senderRef = doc(db, "users", fromUid);
             const senderDoc = await transaction.get(senderRef);
-            if (!senderDoc.exists()) throw "Sender not found";
+            if (!senderDoc.exists()) throw "找不到匯款人";
 
             const senderData = senderDoc.data();
-            if (senderData.points < amount) throw "Insufficient points";
+            if (senderData.points < amount) throw "點數不足";
 
             // 2. Get Receiver by Email
             const usersRef = collection(db, "users");
             const q = query(usersRef, where("email", "==", toEmail));
             const querySnapshot = await getDocs(q);
 
-            if (querySnapshot.empty) throw "Receiver not found";
+            if (querySnapshot.empty) throw "找不到收款人";
             const receiverDoc = querySnapshot.docs[0];
             const receiverRef = doc(db, "users", receiverDoc.id);
 
@@ -48,6 +48,6 @@ export async function POST(request) {
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        return NextResponse.json({ error: typeof error === 'string' ? error : "Transfer failed" }, { status: 500 });
+        return NextResponse.json({ error: typeof error === 'string' ? error : "轉帳失敗" }, { status: 500 });
     }
 }

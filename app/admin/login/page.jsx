@@ -22,7 +22,7 @@ export default function AdminLoginPage() {
             if (ADMIN_EMAILS.includes(user.email)) {
                 router.push("/admin/users");
             } else {
-                toast.error("Access Denied: Not an Admin");
+                toast.error("拒絕存取：非管理員");
                 // Optionally sign out or redirect to home
             }
         }
@@ -35,14 +35,14 @@ export default function AdminLoginPage() {
             const user = userCredential.user;
 
             if (ADMIN_EMAILS.includes(user.email)) {
-                toast.success("Welcome Admin! 🛠️");
+                toast.success("歡迎管理員！🛠️");
                 router.push("/admin/users");
             } else {
-                toast.error("You are not an admin!");
+                toast.error("您不是管理員！");
                 await auth.signOut();
             }
         } catch (error) {
-            toast.error("Login failed: " + error.message);
+            toast.error("登入失敗: " + error.message);
         }
     };
 
@@ -50,13 +50,13 @@ export default function AdminLoginPage() {
         <div className="min-h-screen flex items-center justify-center p-4 bg-wawag-dark">
             <Card className="w-full max-w-md p-8 bg-white/90 backdrop-blur-xl">
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-black text-wawag-dark">Admin Panel</h1>
-                    <p className="text-gray-500">Restricted Access</p>
+                    <h1 className="text-3xl font-black text-wawag-dark">管理員後台</h1>
+                    <p className="text-gray-500">限制存取</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-1">Admin Email</label>
+                        <label className="block text-sm font-bold text-gray-700 mb-1">管理員 Email</label>
                         <input
                             type="email"
                             required
@@ -66,7 +66,7 @@ export default function AdminLoginPage() {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-1">Password</label>
+                        <label className="block text-sm font-bold text-gray-700 mb-1">密碼</label>
                         <input
                             type="password"
                             required
@@ -76,7 +76,7 @@ export default function AdminLoginPage() {
                         />
                     </div>
                     <Button type="submit" className="w-full bg-wawag-dark text-white hover:bg-gray-800">
-                        Login to Admin
+                        登入後台
                     </Button>
                 </form>
             </Card>

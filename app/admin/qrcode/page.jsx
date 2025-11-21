@@ -52,20 +52,20 @@ export default function AdminQRCodePage() {
 
             if (res.ok) {
                 setGeneratedCode(data);
-                toast.success("QRCode Generated! 🎟️");
+                toast.success("QR Code 已產生！🎟️");
             } else {
-                toast.error(data.error || "Failed to generate");
+                toast.error(data.error || "產生失敗");
             }
 
         } catch (error) {
-            toast.error("Failed to generate code");
+            toast.error("產生代碼失敗");
         } finally {
             setLoading(false);
         }
     };
 
     const handleDelete = async (id) => {
-        if (!confirm("Are you sure you want to delete this code?")) return;
+        if (!confirm("確定要刪除此代碼嗎？")) return;
 
         try {
             const res = await fetch(`/api/admin/delete-code?id=${id}`, {
@@ -76,29 +76,29 @@ export default function AdminQRCodePage() {
             });
 
             if (res.ok) {
-                toast.success("Code deleted");
+                toast.success("代碼已刪除");
             } else {
-                toast.error("Failed to delete");
+                toast.error("刪除失敗");
             }
         } catch (error) {
-            toast.error("Error deleting code");
+            toast.error("刪除代碼時發生錯誤");
         }
     };
 
     return (
         <div className="space-y-6">
             <header>
-                <h2 className="text-3xl font-black text-wawag-dark">QRCode Generator 🎟️</h2>
-                <p className="text-gray-500 font-medium">Create point codes for physical events</p>
+                <h2 className="text-3xl font-black text-wawag-dark">QR Code 產生器 🎟️</h2>
+                <p className="text-gray-500 font-medium">為實體活動建立點數代碼</p>
             </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Generator Section */}
                 <Card className="lg:col-span-1 bg-white/80 border-white/50 backdrop-blur-xl shadow-xl h-fit">
-                    <h3 className="text-xl font-bold text-wawag-purple mb-4">New Code</h3>
+                    <h3 className="text-xl font-bold text-wawag-purple mb-4">新代碼</h3>
                     <form onSubmit={handleGenerate} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-bold text-gray-600 mb-1">Points Value</label>
+                            <label className="block text-sm font-bold text-gray-600 mb-1">點數價值</label>
                             <Input
                                 type="number"
                                 min="1"
@@ -112,7 +112,7 @@ export default function AdminQRCodePage() {
                             className="w-full bg-wawag-pink hover:bg-pink-400 text-white shadow-lg shadow-pink-200"
                             disabled={loading}
                         >
-                            {loading ? "Generating..." : "Generate QRCode ✨"}
+                            {loading ? "產生中..." : "產生 QR Code ✨"}
                         </Button>
                     </form>
 
@@ -130,7 +130,7 @@ export default function AdminQRCodePage() {
                                 />
                             </div>
                             <div className="text-center">
-                                <div className="text-2xl font-black text-wawag-dark">{generatedCode.points} PTS</div>
+                                <div className="text-2xl font-black text-wawag-dark">{generatedCode.points} 點</div>
                                 <div className="font-mono text-xs text-gray-500 bg-white px-2 py-1 rounded mt-1 select-all">
                                     {generatedCode.codeId}
                                 </div>
@@ -141,17 +141,17 @@ export default function AdminQRCodePage() {
 
                 {/* History Section */}
                 <Card className="lg:col-span-2 bg-white/80 border-white/50 backdrop-blur-xl shadow-xl">
-                    <h3 className="text-xl font-bold text-wawag-blue mb-4">History</h3>
+                    <h3 className="text-xl font-bold text-wawag-blue mb-4">歷史紀錄</h3>
 
                     <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-white shadow-sm">
                         <table className="w-full text-left">
                             <thead className="bg-wawag-cream text-gray-500 text-xs uppercase tracking-wider font-bold">
                                 <tr>
-                                    <th className="p-4">Code ID</th>
-                                    <th className="p-4">Points</th>
-                                    <th className="p-4">Status</th>
-                                    <th className="p-4">Created</th>
-                                    <th className="p-4 text-right">Actions</th>
+                                    <th className="p-4">代碼 ID</th>
+                                    <th className="p-4">點數</th>
+                                    <th className="p-4">狀態</th>
+                                    <th className="p-4">建立時間</th>
+                                    <th className="p-4 text-right">操作</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -162,11 +162,11 @@ export default function AdminQRCodePage() {
                                         <td className="p-4">
                                             {item.isUsed ? (
                                                 <span className="inline-flex items-center gap-1 text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-md">
-                                                    Used
+                                                    已使用
                                                 </span>
                                             ) : (
                                                 <span className="inline-flex items-center gap-1 text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded-md">
-                                                    Active
+                                                    有效
                                                 </span>
                                             )}
                                         </td>
@@ -179,7 +179,7 @@ export default function AdminQRCodePage() {
                                                     onClick={() => handleDelete(item.id)}
                                                     className="text-red-400 hover:text-red-600 text-xs font-bold hover:underline"
                                                 >
-                                                    Delete
+                                                    刪除
                                                 </button>
                                             )}
                                         </td>
@@ -189,7 +189,7 @@ export default function AdminQRCodePage() {
                         </table>
 
                         {history.length === 0 && (
-                            <div className="p-8 text-center text-gray-400">No history yet</div>
+                            <div className="p-8 text-center text-gray-400">尚無歷史紀錄</div>
                         )}
                     </div>
                 </Card>

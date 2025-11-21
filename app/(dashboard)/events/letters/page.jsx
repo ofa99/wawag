@@ -44,17 +44,17 @@ export default function LettersPage() {
                 setIsDrawing(false);
             }
         } catch (e) {
-            toast.error("Failed to draw");
+            toast.error("抽取失敗");
             setIsDrawing(false);
         }
     };
 
     return (
         <div className="p-4 max-w-md mx-auto space-y-6 text-center">
-            <h1 className="text-2xl font-black text-wawag-pink">Collect Words 🔠</h1>
+            <h1 className="text-2xl font-black text-wawag-pink">收集字母 🔠</h1>
 
             <div className="bg-white/40 p-4 rounded-2xl">
-                <p className="text-sm font-bold text-gray-600 mb-2">Your Collection</p>
+                <p className="text-sm font-bold text-gray-600 mb-2">您的收藏</p>
                 <div className="flex justify-center gap-4 text-2xl font-black">
                     <div className="flex flex-col">
                         <span className="text-wawag-pink">W</span>
@@ -102,12 +102,12 @@ export default function LettersPage() {
                 disabled={isDrawing}
                 className="w-full text-lg py-4 bg-wawag-pink hover:bg-pink-400"
             >
-                {isDrawing ? "Drawing..." : "Draw Letter (-50 Pts)"}
+                {isDrawing ? "抽取中..." : "抽取字母 (-50 點)"}
             </Button>
 
             <Link href="/events/letters/redeem" className="block">
                 <Button variant="outline" className="w-full">
-                    Redeem "WAWAG" (+500 Pts)
+                    兌換 "WAWAG" (+500 點)
                 </Button>
             </Link>
         </div>

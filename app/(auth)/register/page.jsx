@@ -36,10 +36,10 @@ export default function RegisterPage() {
                 avatar: `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${user.uid}`
             });
 
-            toast.success("Account created! 🎉");
+            toast.success("帳戶建立成功！🎉");
             router.push("/dashboard");
         } catch (error) {
-            toast.error("Registration failed: " + error.message);
+            toast.error("註冊失敗: " + error.message);
         }
     };
 
@@ -76,16 +76,16 @@ export default function RegisterPage() {
                         >
                             🐻
                         </motion.div>
-                        <h1 className="text-3xl font-black text-wawag-blue tracking-tight">Join the Fun!</h1>
-                        <p className="text-wawag-dark font-medium">Create your account to start collecting</p>
+                        <h1 className="text-3xl font-black text-wawag-blue tracking-tight">加入我們！</h1>
+                        <p className="text-wawag-dark font-medium">建立帳戶開始收集點數</p>
                     </div>
 
                     <form onSubmit={handleRegister} className="space-y-5">
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-wawag-blue ml-2 uppercase tracking-wider">Nickname</label>
+                            <label className="text-xs font-bold text-wawag-blue ml-2 uppercase tracking-wider">暱稱</label>
                             <input
                                 type="text"
-                                placeholder="Super Bear"
+                                placeholder="超級熊熊"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 className="w-full px-5 py-4 rounded-2xl bg-wawag-cream border-2 border-transparent focus:border-wawag-blue focus:bg-white outline-none transition-all font-medium text-gray-600 placeholder-gray-300"
@@ -93,7 +93,7 @@ export default function RegisterPage() {
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-wawag-blue ml-2 uppercase tracking-wider">Email</label>
+                            <label className="text-xs font-bold text-wawag-blue ml-2 uppercase tracking-wider">電子郵件</label>
                             <input
                                 type="email"
                                 placeholder="bear@wawag.com"
@@ -104,7 +104,7 @@ export default function RegisterPage() {
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-wawag-blue ml-2 uppercase tracking-wider">Password</label>
+                            <label className="text-xs font-bold text-wawag-blue ml-2 uppercase tracking-wider">密碼</label>
                             <input
                                 type="password"
                                 placeholder="••••••••"
@@ -115,14 +115,14 @@ export default function RegisterPage() {
                             />
                         </div>
                         <Button type="submit" className="w-full py-4 text-lg font-black rounded-2xl bg-wawag-blue hover:bg-wawag-blue/90 text-white shadow-lg shadow-wawag-blue/30 transform transition hover:-translate-y-1">
-                            Create Account
+                            建立帳戶
                         </Button>
                     </form>
 
                     <p className="text-center text-sm font-medium text-gray-400">
-                        Already have an account?{" "}
+                        已經有帳戶了嗎？{" "}
                         <Link href="/login" className="text-wawag-blue font-black hover:underline decoration-2 underline-offset-4">
-                            Login
+                            登入
                         </Link>
                     </p>
                 </Card>

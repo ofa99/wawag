@@ -7,10 +7,10 @@ import { useEffect } from "react";
 import { toast } from "react-hot-toast";
 
 const adminNavItems = [
-    { name: "Members", href: "/admin/users", icon: "👥" },
-    { name: "Points Log", href: "/admin/points", icon: "📊" },
-    { name: "QRCode", href: "/admin/qrcode", icon: "🎟️" },
-    { name: "Back to App", href: "/dashboard", icon: "🏠" },
+    { name: "會員管理", href: "/admin/users", icon: "👥" },
+    { name: "點數紀錄", href: "/admin/points", icon: "📊" },
+    { name: "QR Code", href: "/admin/qrcode", icon: "🎟️" },
+    { name: "返回前台", href: "/dashboard", icon: "🏠" },
 ];
 
 export default function AdminLayout({ children }) {
@@ -29,14 +29,14 @@ export default function AdminLayout({ children }) {
                 }
             } else {
                 if (!ADMIN_EMAILS.includes(user.email)) {
-                    toast.error("Unauthorized Access");
+                    toast.error("未經授權的存取");
                     router.push("/dashboard");
                 }
             }
         }
     }, [user, loading, pathname, router]);
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center">Loading Admin...</div>;
+    if (loading) return <div className="min-h-screen flex items-center justify-center">載入後台...</div>;
 
     // If on login page, render without sidebar
     if (pathname === "/admin/login") {
@@ -50,8 +50,8 @@ export default function AdminLayout({ children }) {
             {/* Mobile/Desktop Sidebar/Header */}
             <aside className="bg-white/80 backdrop-blur-xl border-r border-white/50 w-full md:w-64 flex-shrink-0 z-20">
                 <div className="p-6 bg-wawag-pink-light">
-                    <h1 className="text-2xl font-black text-wawag-dark tracking-tight">Admin Panel 🛠️</h1>
-                    <p className="text-xs text-wawag-purple font-bold mt-1">Macaron Manager</p>
+                    <h1 className="text-2xl font-black text-wawag-dark tracking-tight">管理員後台 🛠️</h1>
+                    <p className="text-xs text-wawag-purple font-bold mt-1">馬卡龍管理員</p>
                 </div>
                 <nav className="p-4 space-y-2">
                     {adminNavItems.map((item) => {

@@ -12,18 +12,18 @@ export async function POST(request) {
         // Verify admin authorization
         const adminEmail = request.headers.get("x-admin-email");
         if (!adminEmail || !ADMIN_EMAILS.includes(adminEmail)) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+            return NextResponse.json({ error: "未經授權" }, { status: 403 });
         }
 
         const { name, email, password } = await request.json();
 
         // Validate input
         if (!name || !email || !password) {
-            return NextResponse.json({ error: "Name, email, and password are required" }, { status: 400 });
+            return NextResponse.json({ error: "需要姓名、Email 和密碼" }, { status: 400 });
         }
 
         if (password.length < 6) {
-            return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
+            return NextResponse.json({ error: "密碼必須至少 6 個字元" }, { status: 400 });
         }
 
         // 1. Create User via Firebase Auth REST API
@@ -43,7 +43,7 @@ export async function POST(request) {
         const signUpData = await signUpRes.json();
 
         if (!signUpRes.ok) {
-            throw new Error(signUpData.error?.message || "Failed to create user in Auth");
+            throw new Error(signUpData.error?.message || "在 Auth 中建立使用者失敗");
         }
 
         const uid = signUpData.localId;
@@ -78,13 +78,13 @@ export async function POST(request) {
         return NextResponse.json({
             success: true,
             uid: uid,
-            message: "User created successfully"
+            message: "使用者建立成功"
         });
 
     } catch (error) {
         console.error("Create User Error:", error);
         return NextResponse.json({
-            error: error.message || "Failed to create user"
+            error: error.message || "建立使用者失敗"
         }, { status: 500 });
     }
 }

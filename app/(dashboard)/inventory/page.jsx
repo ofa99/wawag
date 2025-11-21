@@ -38,14 +38,14 @@ export default function InventoryPage() {
     return (
         <div className="p-4 space-y-6">
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-800">My Bag</h1>
+                <h1 className="text-2xl font-bold text-gray-800">我的背包</h1>
                 <span className="bg-wawag-yellow/20 text-wawag-yellow-dark px-3 py-1 rounded-full text-sm font-bold">
-                    {items.length} Items
+                    {items.length} 個物品
                 </span>
             </div>
 
             {loading ? (
-                <div className="text-center py-12 text-gray-400">Loading bag... 🎒</div>
+                <div className="text-center py-12 text-gray-400">載入背包中... 🎒</div>
             ) : items.length > 0 ? (
                 <div className="grid grid-cols-2 gap-4">
                     {items.map((item, index) => (
@@ -71,8 +71,8 @@ export default function InventoryPage() {
             ) : (
                 <div className="text-center py-12">
                     <div className="text-6xl mb-4">🕸️</div>
-                    <p className="text-gray-500 font-bold">Your bag is empty!</p>
-                    <p className="text-xs text-gray-400 mt-1">Visit the shop or events to get items.</p>
+                    <p className="text-gray-500 font-bold">背包是空的！</p>
+                    <p className="text-xs text-gray-400 mt-1">去商店或參加活動來獲取物品。</p>
                 </div>
             )}
         </div>

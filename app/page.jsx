@@ -8,7 +8,7 @@ export default function Home() {
                     WAWAG
                 </h1>
                 <p className="text-xl text-gray-600 font-medium">
-                    Play. Collect. Trade.
+                    遊玩・收集・交換
                 </p>
             </div>
 
@@ -21,12 +21,12 @@ export default function Home() {
                     href="/login"
                     className="block w-full py-4 bg-wawag-pink text-white text-xl font-bold rounded-2xl shadow-lg hover:scale-105 transition-transform active:scale-95"
                 >
-                    Start Playing!
+                    開始遊玩！
                 </Link>
 
                 <div className="flex justify-center gap-4 text-sm text-gray-500">
-                    <span>✨ Collect Points</span>
-                    <span>🎁 Win Prizes</span>
+                    <span>✨ 收集點數</span>
+                    <span>🎁 贏取獎品</span>
                 </div>
             </div>
         </div>

@@ -54,10 +54,10 @@ export default function DashboardPage() {
                 method: "POST",
                 body: JSON.stringify({ uid: user.uid, amount: 10, type: "DAILY" }),
             });
-            if (res.ok) toast.success("Daily Bonus +10! 🌟");
-            else toast.error("Already claimed today!");
+            if (res.ok) toast.success("每日簽到 +10! 🌟");
+            else toast.error("今天已經簽到過了！");
         } catch (e) {
-            toast.error("Failed to claim");
+            toast.error("簽到失敗");
         }
     };
 
@@ -70,12 +70,12 @@ export default function DashboardPage() {
             const data = await res.json();
 
             if (res.ok) {
-                toast.success(`VIP Gift Claimed! +${data.reward} Points 🎁`);
+                toast.success(`VIP 禮物已領取！ +${data.reward} 點 🎁`);
             } else {
-                toast.error(data.error || "Failed to claim");
+                toast.error(data.error || "領取失敗");
             }
         } catch (e) {
-            toast.error("Something went wrong");
+            toast.error("發生錯誤");
         }
     };
 
@@ -92,15 +92,15 @@ export default function DashboardPage() {
             const data = await res.json();
 
             if (res.ok) {
-                toast.success(`Sent ${transferAmount} points to ${transferEmail}!`);
+                toast.success(`已發送 ${transferAmount} 點給 ${transferEmail}!`);
                 setShowTransferModal(false);
                 setTransferEmail("");
                 setTransferAmount(10);
             } else {
-                toast.error(data.error || "Transfer failed");
+                toast.error(data.error || "轉帳失敗");
             }
         } catch (error) {
-            toast.error("Something went wrong");
+            toast.error("發生錯誤");
         } finally {
             setTransferLoading(false);
         }
@@ -109,9 +109,9 @@ export default function DashboardPage() {
     const handleLogout = async () => {
         try {
             await auth.signOut();
-            toast.success("See you soon! 👋");
+            toast.success("下次見！👋");
         } catch (error) {
-            toast.error("Failed to logout");
+            toast.error("登出失敗");
         }
     };
 
@@ -119,10 +119,10 @@ export default function DashboardPage() {
     const isVip = currentLevel >= 7;
 
     const menuItems = [
-        { name: "Transfer", action: () => setShowTransferModal(true), icon: "💸", color: "bg-wawag-green-light" },
-        { name: "Collect", href: "/events/letters", icon: "🔠", color: "bg-wawag-yellow" },
-        { name: "Scan QR", href: "/scanner", icon: "📷", color: "bg-wawag-pink-light" },
-        { name: "My Bag", href: "/inventory", icon: "🎒", color: "bg-wawag-purple-light" },
+        { name: "轉帳", action: () => setShowTransferModal(true), icon: "💸", color: "bg-wawag-green-light" },
+        { name: "收集", href: "/events/letters", icon: "🔠", color: "bg-wawag-yellow" },
+        { name: "掃描 QR", href: "/scanner", icon: "📷", color: "bg-wawag-pink-light" },
+        { name: "背包", href: "/inventory", icon: "🎒", color: "bg-wawag-purple-light" },
     ];
 
     return (
@@ -144,8 +144,8 @@ export default function DashboardPage() {
                             >
                                 🎉
                             </motion.div>
-                            <h1 className="text-5xl font-black text-wawag-yellow drop-shadow-lg">LEVEL UP!</h1>
-                            <p className="text-2xl font-bold mt-2">Welcome to Level {currentLevel}</p>
+                            <h1 className="text-5xl font-black text-wawag-yellow drop-shadow-lg">升級啦！</h1>
+                            <p className="text-2xl font-bold mt-2">歡迎來到等級 {currentLevel}</p>
                         </div>
                     </motion.div>
                 )}
@@ -168,10 +168,10 @@ export default function DashboardPage() {
                             className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <h2 className="text-2xl font-black text-wawag-purple mb-4 text-center">Send Points 💸</h2>
+                            <h2 className="text-2xl font-black text-wawag-purple mb-4 text-center">發送點數 💸</h2>
                             <form onSubmit={handleTransfer} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-600 mb-1 ml-1">Receiver Email</label>
+                                    <label className="block text-sm font-bold text-gray-600 mb-1 ml-1">接收者 Email</label>
                                     <Input
                                         type="email"
                                         required
@@ -181,7 +181,7 @@ export default function DashboardPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-600 mb-1 ml-1">Amount (Min 10)</label>
+                                    <label className="block text-sm font-bold text-gray-600 mb-1 ml-1">數量 (最少 10)</label>
                                     <Input
                                         type="number"
                                         min="10"
@@ -198,14 +198,14 @@ export default function DashboardPage() {
                                         className="flex-1"
                                         onClick={() => setShowTransferModal(false)}
                                     >
-                                        Cancel
+                                        取消
                                     </Button>
                                     <Button
                                         type="submit"
                                         className="flex-1 bg-wawag-purple text-white hover:bg-purple-400"
                                         disabled={transferLoading}
                                     >
-                                        {transferLoading ? "Sending..." : "Confirm"}
+                                        {transferLoading ? "發送中..." : "確認"}
                                     </Button>
                                 </div>
                             </form>
@@ -237,10 +237,10 @@ export default function DashboardPage() {
                             />
                         </div>
                         <div className="text-white">
-                            <h1 className="text-2xl font-black tracking-wide">{userData?.displayName || "Guest"}</h1>
+                            <h1 className="text-2xl font-black tracking-wide">{userData?.displayName || "訪客"}</h1>
                             <div className="flex items-center gap-2 mt-1">
                                 <span className="bg-white/30 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/50">
-                                    LV.{currentLevel} {isVip ? "VIP 👑" : "Member"}
+                                    LV.{currentLevel} {isVip ? "VIP 👑" : "會員"}
                                 </span>
                             </div>
                         </div>
@@ -259,7 +259,7 @@ export default function DashboardPage() {
                 <Card className="bg-gradient-to-br from-wawag-blue to-wawag-blue-light text-white border-none relative overflow-hidden shadow-wawag-blue/40 shadow-xl">
                     <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/20 rounded-full blur-3xl" />
                     <div className="flex flex-col items-center py-4 relative z-10">
-                        <span className="text-sm font-bold opacity-90 tracking-widest uppercase">Total Balance</span>
+                        <span className="text-sm font-bold opacity-90 tracking-widest uppercase">總餘額</span>
                         <motion.h2
                             key={userData?.points}
                             initial={{ scale: 1.5 }}
@@ -272,7 +272,7 @@ export default function DashboardPage() {
                             onClick={handleDailyCheckIn}
                             className="mt-6 bg-white text-wawag-blue hover:bg-gray-50 text-sm py-2 px-6 rounded-full shadow-none"
                         >
-                            📅 Daily Check-in
+                            📅 每日簽到
                         </Button>
                     </div>
                 </Card>
@@ -280,12 +280,12 @@ export default function DashboardPage() {
                 {/* Level Progress */}
                 <div className="bg-white/80 backdrop-blur-md p-5 rounded-3xl shadow-sm border border-white">
                     <div className="flex justify-between text-xs font-bold text-gray-500 mb-2">
-                        <span className="text-wawag-pink">LEVEL {currentLevel}</span>
-                        <span>{progress.current} / {progress.max} EXP</span>
+                        <span className="text-wawag-pink">等級 {currentLevel}</span>
+                        <span>{progress.current} / {progress.max} 經驗值</span>
                     </div>
                     <ProgressBar value={progress.percent} className="h-3" />
                     <p className="text-center text-xs text-gray-400 mt-2 font-medium">
-                        {100 - Math.round(progress.percent)}% to Level {progress.nextLevel}! 🚀
+                        還差 {100 - Math.round(progress.percent)}% 升級到等級 {progress.nextLevel}! 🚀
                     </p>
                 </div>
 
@@ -294,10 +294,10 @@ export default function DashboardPage() {
                     <div className="bg-white/90 rounded-[1.3rem] p-4 flex items-center justify-between">
                         <div>
                             <h3 className={`font-bold ${isVip ? "text-wawag-purple" : "text-gray-400"}`}>
-                                {isVip ? "VIP Monthly Gift 🎁" : "VIP Locked 🔒"}
+                                {isVip ? "VIP 每月禮物 🎁" : "VIP 未解鎖 🔒"}
                             </h3>
                             <p className="text-xs text-gray-500">
-                                {isVip ? "Claim your monthly reward!" : "Reach LV.7 to unlock"}
+                                {isVip ? "領取您的每月獎勵！" : "達到 LV.7 解鎖"}
                             </p>
                         </div>
                         <Button
@@ -306,7 +306,7 @@ export default function DashboardPage() {
                             disabled={!isVip}
                             onClick={handleVipClaim}
                         >
-                            {isVip ? "Claim" : "Locked"}
+                            {isVip ? "領取" : "未解鎖"}
                         </Button>
                     </div>
                 </div>
