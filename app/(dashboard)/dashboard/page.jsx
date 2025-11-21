@@ -214,147 +214,329 @@ export default function DashboardPage() {
                 )}
             </AnimatePresence>
 
-            {/* Header Section */}
-            <header className="bg-wawag-pink p-8 pb-12 rounded-b-4xl shadow-lg relative overflow-hidden">
+            {/* Gradient Background */}
+            <div className="fixed inset-0 bg-gradient-to-b from-sky-300 via-pink-200 to-pink-300 -z-10" />
+
+            {/* Floating Clouds */}
+            <div className="fixed inset-0 pointer-events-none -z-5">
+                <div className="absolute top-10 left-10 w-32 h-20 bg-white/60 rounded-full blur-sm animate-float" />
+                <div className="absolute top-20 right-20 w-40 h-24 bg-white/50 rounded-full blur-sm animate-float-delayed" />
+                <div className="absolute bottom-32 left-1/4 w-36 h-22 bg-white/40 rounded-full blur-sm animate-float" />
+                <div className="absolute top-1/3 right-1/3 w-28 h-18 bg-white/50 rounded-full blur-sm animate-float-delayed" />
+            </div>
+
+            {/* Floating Capsules */}
+            <div className="fixed inset-0 pointer-events-none -z-5">
+                <div className="absolute top-1/4 left-20 w-16 h-16 bg-gradient-to-br from-pink-300 to-purple-300 rounded-full opacity-60 animate-float-slow" />
+                <div className="absolute top-1/2 right-32 w-14 h-14 bg-gradient-to-br from-blue-300 to-cyan-300 rounded-full opacity-60 animate-float-slow-delayed" />
+                <div className="absolute bottom-1/4 left-1/3 w-12 h-12 bg-gradient-to-br from-green-300 to-teal-300 rounded-full opacity-60 animate-float-slow" />
+            </div>
+
+            <div className="container mx-auto px-4 py-8 relative z-10">
+                {/* Header - User Info Card (Claw Machine Top) */}
                 <motion.div
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute top-4 right-4 text-6xl opacity-20"
-                >☁️</motion.div>
-                <motion.div
-                    animate={{ y: [0, 10, 0] }}
-                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                    className="absolute bottom-4 left-4 text-5xl opacity-20"
-                >⭐</motion.div>
-
-                <div className="flex justify-between items-center relative z-10">
-                    <div className="flex items-center gap-4">
-                        <div className="w-20 h-20 rounded-full border-4 border-white shadow-lg overflow-hidden bg-wawag-yellow">
-                            <img
-                                src={userData?.avatar || `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${user?.uid}`}
-                                alt="Avatar"
-                                className="w-full h-full object-cover"
-                            />
-                        </div>
-                        <div className="text-white">
-                            <div className="flex items-center gap-2">
-                                <h1 className="text-2xl font-black tracking-wide">{userData?.displayName || "訪客"}</h1>
-                                <Link href="/profile/edit">
-                                    <motion.button
-                                        whileHover={{ scale: 1.1 }}
-                                        whileTap={{ scale: 0.9 }}
-                                        className="text-white/80 hover:text-white transition-colors"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                        </svg>
-                                    </motion.button>
-                                </Link>
-                            </div>
-                            <div className="flex items-center gap-2 mt-1">
-                                <span className="bg-white/30 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/50">
-                                    LV.{currentLevel} {isVip ? "VIP 👑" : "會員"}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <Button
-                        onClick={handleLogout}
-                        className="bg-white/20 hover:bg-white/30 text-white border border-white/50 rounded-xl p-3 backdrop-blur-md shadow-sm"
-                    >
-                        <span className="text-xl">🚪</span>
-                    </Button>
-                </div>
-            </header>
-
-            <div className="p-4 space-y-6 -mt-8 relative z-10 max-w-md mx-auto">
-                {/* Points Card */}
-                <Card className="bg-gradient-to-br from-wawag-blue to-wawag-blue-light text-white border-none relative overflow-hidden shadow-wawag-blue/40 shadow-xl">
-                    <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/20 rounded-full blur-3xl" />
-                    <div className="flex flex-col items-center py-4 relative z-10">
-                        <span className="text-sm font-bold opacity-90 tracking-widest uppercase">總餘額</span>
-                        <motion.h2
-                            key={userData?.points}
-                            initial={{ scale: 1.5 }}
-                            animate={{ scale: 1 }}
-                            className="text-6xl font-black mt-2 drop-shadow-md"
-                        >
-                            {userData?.points || 0}
-                        </motion.h2>
-                        <Button
-                            onClick={handleDailyCheckIn}
-                            className="mt-6 bg-white text-wawag-blue hover:bg-gray-50 text-sm py-2 px-6 rounded-full shadow-none"
-                        >
-                            📅 每日簽到
-                        </Button>
-                    </div>
-                </Card>
-
-                {/* Level Progress */}
-                <div className="bg-white/80 backdrop-blur-md p-5 rounded-3xl shadow-sm border border-white">
-                    <div className="flex justify-between text-xs font-bold text-gray-500 mb-2">
-                        <span className="text-wawag-pink">等級 {currentLevel}</span>
-                        <span>{progress.current} / {progress.max} 經驗值</span>
-                    </div>
-                    <ProgressBar value={progress.percent} className="h-3" />
-                    <p className="text-center text-xs text-gray-400 mt-2 font-medium">
-                        還差 {100 - Math.round(progress.percent)}% 升級到等級 {progress.nextLevel}! 🚀
-                    </p>
-                </div>
-
-                {/* VIP Monthly Claim */}
-                <div className={`p-1 rounded-3xl transition-all ${isVip ? "bg-gradient-to-r from-wawag-purple to-wawag-pink" : "bg-gray-200"}`}>
-                    <div className="bg-white/90 rounded-[1.3rem] p-4 flex items-center justify-between">
-                        <div>
-                            <h3 className={`font-bold ${isVip ? "text-wawag-purple" : "text-gray-400"}`}>
-                                {isVip ? "VIP 每月禮物 🎁" : "VIP 未解鎖 🔒"}
-                            </h3>
-                            <p className="text-xs text-gray-500">
-                                {isVip ? "領取您的每月獎勵！" : "達到 LV.7 解鎖"}
-                            </p>
-                        </div>
-                        <Button
-                            variant={isVip ? "primary" : "ghost"}
-                            className={isVip ? "bg-wawag-purple text-white" : "bg-gray-100 text-gray-400"}
-                            disabled={!isVip}
-                            onClick={handleVipClaim}
-                        >
-                            {isVip ? "領取" : "未解鎖"}
-                        </Button>
-                    </div>
-                </div>
-
-                {/* Quick Actions Grid */}
-                <div className="grid grid-cols-2 gap-4">
-                    {menuItems.map((item) => (
-                        item.href ? (
-                            <Link href={item.href} key={item.name}>
+                    initial={{ y: -50, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    className="mb-6"
+                >
+                    <div className="relative bg-gradient-to-r from-pink-400 to-pink-500 rounded-t-3xl p-4 shadow-xl border-4 border-pink-600">
+                        <div className="flex items-center justify-between">
+                            {/* Avatar */}
+                            <Link href="/profile/edit">
                                 <motion.div
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    className={`${item.color} h-32 rounded-3xl flex flex-col items-center justify-center shadow-sm text-wawag-dark cursor-pointer relative overflow-hidden group`}
+                                    className="relative"
                                 >
-                                    <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    <span className="text-4xl mb-2 drop-shadow-sm">{item.icon}</span>
-                                    <span className="font-bold text-sm opacity-80">{item.name}</span>
+                                    <div className="w-20 h-20 rounded-full bg-yellow-300 border-4 border-white shadow-lg overflow-hidden">
+                                        <img
+                                            src={userData?.avatar || userData?.photoURL || `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${user?.uid}`}
+                                            alt="Avatar"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
                                 </motion.div>
                             </Link>
-                        ) : (
-                            <motion.div
-                                key={item.name}
-                                onClick={item.action}
-                                whileHover={{ scale: 1.05 }}
+
+                            {/* Name & Level */}
+                            <div className="flex-1 ml-4">
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-2xl font-black text-white drop-shadow-lg">
+                                        {userData?.displayName || "Guest"}
+                                    </h2>
+                                    <Link href="/profile/edit">
+                                        <motion.button
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.9 }}
+                                            className="text-white/80 hover:text-white"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                            </svg>
+                                        </motion.button>
+                                    </Link>
+                                </div>
+                                <div className="inline-block bg-purple-500 text-white px-3 py-1 rounded-full text-xs font-bold mt-1 shadow-md">
+                                    Lv.{level} Member
+                                </div>
+                            </div>
+
+                            {/* Points Badge */}
+                            <div className="bg-yellow-400 rounded-full w-16 h-16 flex items-center justify-center border-4 border-yellow-600 shadow-lg">
+                                <div className="text-center">
+                                    <div className="text-2xl">🪙</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* Main Glass Display - Balance & Actions */}
+                <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                    className="relative mb-6"
+                >
+                    {/* Glass Frame */}
+                    <div className="bg-gradient-to-b from-pink-300/80 to-pink-400/80 backdrop-blur-xl rounded-3xl p-6 border-8 border-pink-500 shadow-2xl">
+                        {/* Claw Icon */}
+                        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                            <div className="text-6xl filter drop-shadow-lg">🦾</div>
+                        </div>
+
+                        {/* Balance Display */}
+                        <div className="text-center mt-8 mb-6">
+                            <div className="text-sm font-bold text-purple-900 mb-2">TOTAL BALANCE</div>
+                            <div className="relative inline-block">
+                                <div className="bg-yellow-300 rounded-full px-8 py-4 border-6 border-yellow-500 shadow-xl">
+                                    <div className="text-5xl font-black text-yellow-900">{points}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-4 justify-center mb-4">
+                            <motion.button
+                                whileHover={{ scale: 1.05, y: -2 }}
                                 whileTap={{ scale: 0.95 }}
-                                className={`${item.color} h-32 rounded-3xl flex flex-col items-center justify-center shadow-sm text-wawag-dark cursor-pointer relative overflow-hidden group`}
+                                onClick={handleCheckIn}
+                                disabled={hasCheckedIn}
+                                className={`relative px-6 py-3 rounded-xl font-bold text-white shadow-lg transition-all ${hasCheckedIn
+                                    ? "bg-gray-400 cursor-not-allowed"
+                                    : "bg-gradient-to-b from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700"
+                                    }`}
                             >
-                                <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <span className="text-4xl mb-2 drop-shadow-sm">{item.icon}</span>
-                                <span className="font-bold text-sm opacity-80">{item.name}</span>
+                                <span className="relative z-10">
+                                    {hasCheckedIn ? "✓ Checked In" : "🎁 Daily Check-in"}
+                                </span>
+                            </motion.button>
+
+                            <motion.button
+                                whileHover={{ scale: 1.05, y: -2 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => router.push("/scanner")}
+                                className="relative px-6 py-3 bg-gradient-to-b from-purple-400 to-purple-600 hover:from-purple-500 hover:to-purple-700 rounded-xl font-bold text-white shadow-lg transition-all"
+                            >
+                                <span className="relative z-10">🎯 GRAB PRIZE</span>
+                            </motion.button>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* Level Progress Bar */}
+                <motion.div
+                    initial={{ x: -50, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="mb-6"
+                >
+                    <div className="bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-300 rounded-full p-4 border-6 border-yellow-600 shadow-xl relative overflow-hidden">
+                        {/* Decorative Stars */}
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-3xl animate-pulse">⭐</div>
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-3xl animate-pulse">⭐</div>
+
+                        <div className="text-center mb-2">
+                            <span className="font-black text-yellow-900 text-lg">LEVEL {level}</span>
+                        </div>
+                        <div className="relative h-8 bg-yellow-200 rounded-full overflow-hidden border-4 border-yellow-700">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${progressPercent}%` }}
+                                transition={{ duration: 1, ease: "easeOut" }}
+                                className="h-full bg-gradient-to-r from-orange-400 to-red-500 rounded-full relative overflow-hidden"
+                            >
+                                <div className="absolute inset-0 bg-white/30 animate-shimmer" />
                             </motion.div>
-                        )
-                    ))}
-                </div>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-xs font-black text-yellow-900 drop-shadow-lg">
+                                    {progress.current} / {nextLevelPoints} EXP
+                                </span>
+                            </div>
+                        </div>
+                        <div className="text-center mt-2 text-xs font-bold text-yellow-900">
+                            {progressPercent}% to Level {level + 1} 🎉
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* VIP Status */}
+                <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="mb-6"
+                >
+                    {vipStatus ? (
+                        <div className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-400 rounded-2xl p-4 border-6 border-yellow-600 shadow-xl relative overflow-hidden">
+                            {/* Chain decoration */}
+                            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-yellow-600 via-yellow-700 to-yellow-600" />
+                            <div className="text-center">
+                                <div className="text-2xl mb-2">👑</div>
+                                <div className="font-black text-yellow-900 text-lg">VIP UNLOCKED</div>
+                                <div className="text-sm text-yellow-800 mt-1">Enjoy exclusive benefits!</div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="bg-gradient-to-r from-gray-400 via-gray-500 to-gray-400 rounded-2xl p-4 border-6 border-gray-600 shadow-xl relative overflow-hidden">
+                            {/* Chain decoration */}
+                            <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(0,0,0,0.1)_10px,rgba(0,0,0,0.1)_20px)]" />
+                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-6xl">🔒</div>
+                            <div className="text-center relative z-10">
+                                <div className="font-black text-gray-900 text-lg">VIP Locked 🔒</div>
+                                <div className="text-sm text-gray-800 mt-1">Reach Lv.7 to unlock</div>
+                            </div>
+                        </div>
+                    )}
+                </motion.div>
+
+                {/* Bottom Navigation Buttons */}
+                <motion.div
+                    initial={{ y: 50, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="grid grid-cols-2 gap-4"
+                >
+                    {/* Transfer Button */}
+                    <motion.div
+                        whileHover={{ scale: 1.05, y: -4 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="relative"
+                        onClick={() => setShowTransferModal(true)} // Use existing modal
+                    >
+                        <div className="bg-gradient-to-b from-green-400 to-green-600 rounded-3xl p-6 border-6 border-green-700 shadow-xl relative overflow-hidden">
+                            {/* Button frame decoration */}
+                            <div className="absolute top-2 left-2 right-2 h-3 bg-green-300/50 rounded-full" />
+                            <div className="absolute bottom-2 left-2 right-2 h-3 bg-green-800/50 rounded-full" />
+
+                            <div className="text-center relative z-10">
+                                <div className="text-5xl mb-2">💰</div>
+                                <div className="font-black text-white text-xl drop-shadow-lg">Transfer</div>
+                            </div>
+
+                            {/* Joystick decoration */}
+                            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-12 h-16 bg-gradient-to-b from-red-500 to-red-700 rounded-full border-4 border-red-800 shadow-lg" />
+                        </div>
+                    </motion.div>
+
+                    {/* Collect (Scan) Button */}
+                    <Link href="/scanner">
+                        <motion.div
+                            whileHover={{ scale: 1.05, y: -4 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="relative"
+                        >
+                            <div className="bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-3xl p-6 border-6 border-yellow-700 shadow-xl relative overflow-hidden">
+                                {/* Button frame decoration */}
+                                <div className="absolute top-2 left-2 right-2 h-3 bg-yellow-300/50 rounded-full" />
+                                <div className="absolute bottom-2 left-2 right-2 h-3 bg-yellow-800/50 rounded-full" />
+
+                                <div className="text-center relative z-10">
+                                    <div className="text-5xl mb-2">🎲</div>
+                                    <div className="font-black text-white text-xl drop-shadow-lg">Collect</div>
+                                </div>
+
+                                {/* Joystick decoration */}
+                                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-12 h-16 bg-gradient-to-b from-red-500 to-red-700 rounded-full border-4 border-red-800 shadow-lg" />
+                            </div>
+                        </motion.div>
+                    </Link>
+                </motion.div>
+
+                {/* Bottom Navigation Icons */}
+                <motion.div
+                    initial={{ y: 50, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="mt-6 bg-gradient-to-r from-pink-300 to-pink-400 rounded-full p-4 border-6 border-pink-500 shadow-xl"
+                >
+                    <div className="flex justify-around items-center">
+                        <Link href="/dashboard">
+                            <motion.div
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                className="flex flex-col items-center"
+                            >
+                                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center border-4 border-pink-400 shadow-lg">
+                                    <span className="text-3xl">🏠</span>
+                                </div>
+                                <span className="text-xs font-bold text-white mt-1">Home</span>
+                            </motion.div>
+                        </Link>
+
+                        <Link href="/profile/edit">
+                            <motion.div
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                className="flex flex-col items-center"
+                            >
+                                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center border-4 border-pink-400 shadow-lg">
+                                    <span className="text-3xl">👤</span>
+                                </div>
+                                <span className="text-xs font-bold text-white mt-1">Profile</span>
+                            </motion.div>
+                        </Link>
+                    </div>
+                </motion.div>
             </div>
+
+            <style jsx>{`
+                @keyframes float {
+                    0%, 100% { transform: translateY(0px); }
+                    50% { transform: translateY(-20px); }
+                }
+                @keyframes float-delayed {
+                    0%, 100% { transform: translateY(0px); }
+                    50% { transform: translateY(-15px); }
+                }
+                @keyframes float-slow {
+                    0%, 100% { transform: translateY(0px) translateX(0px); }
+                    50% { transform: translateY(-30px) translateX(10px); }
+                }
+                @keyframes float-slow-delayed {
+                    0%, 100% { transform: translateY(0px) translateX(0px); }
+                    50% { transform: translateY(-25px) translateX(-10px); }
+                }
+                @keyframes shimmer {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(100%); }
+                }
+                .animate-float {
+                    animation: float 6s ease-in-out infinite;
+                }
+                .animate-float-delayed {
+                    animation: float-delayed 7s ease-in-out infinite;
+                }
+                .animate-float-slow {
+                    animation: float-slow 10s ease-in-out infinite;
+                }
+                .animate-float-slow-delayed {
+                    animation: float-slow-delayed 12s ease-in-out infinite;
+                }
+                .animate-shimmer {
+                    animation: shimmer 2s infinite;
+                }
+            `}</style>
         </div>
     );
 }
