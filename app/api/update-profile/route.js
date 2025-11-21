@@ -19,6 +19,8 @@ export async function POST(request) {
 
         const { displayName, photoURL, phone, lineId } = await request.json();
 
+        console.log("Update profile request:", { displayName, photoURL, phone, lineId, uid: userInfo.uid });
+
         if (!displayName) {
             return NextResponse.json({ error: "顯示名稱為必填" }, { status: 400 });
         }
@@ -37,7 +39,11 @@ export async function POST(request) {
         if (phone !== undefined) updateData.phone = phone;
         if (lineId !== undefined) updateData.lineId = lineId;
 
+        console.log("Updating document with data:", updateData);
+
         await updateDocument("users", userInfo.uid, updateData, token);
+
+        console.log("Profile updated successfully for user:", userInfo.uid);
 
         return NextResponse.json({ success: true });
 

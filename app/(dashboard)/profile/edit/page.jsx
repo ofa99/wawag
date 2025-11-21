@@ -84,6 +84,15 @@ export default function EditProfilePage() {
                 setUploading(false);
             }
 
+            const updatePayload = {
+                displayName: profileData.displayName,
+                photoURL,
+                phone: profileData.phone,
+                lineId: profileData.lineId
+            };
+
+            console.log("Sending update payload:", updatePayload);
+
             // Update profile via API
             const token = await user.getIdToken();
             const res = await fetch("/api/update-profile", {
@@ -92,19 +101,16 @@ export default function EditProfilePage() {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    displayName: profileData.displayName,
-                    photoURL,
-                    phone: profileData.phone,
-                    lineId: profileData.lineId
-                })
+                body: JSON.stringify(updatePayload)
             });
+
+            const data = await res.json();
+            console.log("API Response:", data);
 
             if (res.ok) {
                 toast.success("個人資料已更新！");
                 router.push("/dashboard");
             } else {
-                const data = await res.json();
                 toast.error(data.error || "更新失敗");
             }
         } catch (error) {
