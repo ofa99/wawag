@@ -94,7 +94,7 @@ export async function POST(request) {
     } catch (error) {
         console.error("Create User Error:", error);
         return NextResponse.json({
-            error: error.message || "建立使用者失敗"
+            error: `伺服器錯誤: ${error.message}`
         }, { status: 500 });
     }
 }

@@ -45,6 +45,6 @@ export async function GET(request) {
 
     } catch (error) {
         console.error("Get Users Error:", error);
-        return NextResponse.json({ error: "伺服器內部錯誤" }, { status: 500 });
+        return NextResponse.json({ error: `伺服器錯誤: ${error.message}` }, { status: 500 });
     }
 }
