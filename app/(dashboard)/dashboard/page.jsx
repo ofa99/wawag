@@ -251,17 +251,6 @@ export default function DashboardPage() {
                     className="mb-6"
                 >
                     <div className="relative bg-gradient-to-r from-pink-400 to-pink-500 rounded-t-3xl p-4 shadow-xl border-4 border-pink-600">
-                        {/* Logout Button */}
-                        <button
-                            onClick={handleLogout}
-                            className="absolute top-2 right-2 z-20 bg-white/20 hover:bg-white/30 text-white p-1.5 rounded-full backdrop-blur-sm transition-all border border-white/30"
-                            title="登出"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                            </svg>
-                        </button>
-
                         <div className="flex items-center justify-between mt-4">
                             {/* Avatar */}
                             <Link href="/profile/edit">
@@ -303,11 +292,22 @@ export default function DashboardPage() {
                                 </div>
                             </div>
 
-                            {/* Points Badge */}
-                            <div className="bg-yellow-400 rounded-full w-16 h-16 flex items-center justify-center border-4 border-yellow-600 shadow-lg">
-                                <div className="text-center">
-                                    <div className="text-2xl">🪙</div>
+                            {/* Points Badge with Logout Button */}
+                            <div className="relative">
+                                <div className="bg-yellow-400 rounded-full w-16 h-16 flex items-center justify-center border-4 border-yellow-600 shadow-lg">
+                                    <div className="text-center">
+                                        <div className="text-2xl">🪙</div>
+                                    </div>
                                 </div>
+                                <button
+                                    onClick={handleLogout}
+                                    className="absolute -top-2 -right-2 z-20 bg-pink-400 hover:bg-pink-500 text-white p-1.5 rounded-full shadow-md transition-all border-2 border-white"
+                                    title="登出"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                </button>
                             </div>
                         </div>
                     </div>
