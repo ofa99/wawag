@@ -9,6 +9,7 @@ import { toast } from "react-hot-toast";
 const adminNavItems = [
     { name: "會員管理", href: "/admin/users", icon: "👥" },
     { name: "點數紀錄", href: "/admin/points", icon: "📊" },
+    { name: "禮物管理", href: "/admin/gifts", icon: "🎁" },
     { name: "QR Code", href: "/admin/qrcode", icon: "🎟️" },
     { name: "返回前台", href: "/dashboard", icon: "🏠" },
 ];
