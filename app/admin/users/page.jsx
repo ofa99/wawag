@@ -143,10 +143,13 @@ export default function AdminUsersPage() {
         setShowEditModal(false);
     };
 
-    const filteredUsers = users.filter(u =>
-        u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredUsers = users.filter(u => {
+        if (!u) return false; // Skip if user is null/undefined
+        const email = (u.email || "").toLowerCase();
+        const name = (u.name || "").toLowerCase();
+        const search = searchTerm.toLowerCase();
+        return email.includes(search) || name.includes(search);
+    });
 
     return (
         <div className="space-y-6 relative">
