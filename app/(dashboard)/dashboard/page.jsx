@@ -10,14 +10,26 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getNextLevelProgress, getLevel } from "@/utils/calcLevel";
 import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function DashboardPage() {
     const { user } = useAuth();
+    const router = useRouter();
     const [userData, setUserData] = useState(null);
     const [progress, setProgress] = useState({ current: 0, max: 100, percent: 0, nextLevel: 2 });
     const [showLevelUp, setShowLevelUp] = useState(false);
     const [prevLevel, setPrevLevel] = useState(null);
+
+    // Derived values
+    const points = userData?.points || 0;
+    const currentLevel = userData ? getLevel(userData.totalPointsEarned || 0) : 1;
+    const level = currentLevel;
+    const nextLevelPoints = progress.max;
+    const progressPercent = Math.round(progress.percent);
+    const vipStatus = (userData?.vipStatus === true) || (level >= 7);
+    const hasCheckedIn = false;
+    const isVip = currentLevel >= 7;
 
     // Transfer Modal State
     const [showTransferModal, setShowTransferModal] = useState(false);
@@ -107,23 +119,22 @@ export default function DashboardPage() {
     };
 
     const handleLogout = async () => {
-        try {
-            await auth.signOut();
-            toast.success("下次見！👋");
-        } catch (error) {
-            toast.error("登出失敗");
-        }
+        await auth.signOut();
+        window.location.href = "/login";
     };
 
-    const currentLevel = userData ? getLevel(userData.totalPointsEarned || 0) : 1;
-    const isVip = currentLevel >= 7;
+    const handleCheckIn = handleDailyCheckIn;
 
-    const menuItems = [
-        { name: "轉帳", action: () => setShowTransferModal(true), icon: "💸", color: "bg-wawag-green-light" },
-        { name: "收集", href: "/events/letters", icon: "🔠", color: "bg-wawag-yellow" },
-        { name: "掃描 QR", href: "/scanner", icon: "📷", color: "bg-wawag-pink-light" },
-        { name: "背包", href: "/inventory", icon: "🎒", color: "bg-wawag-purple-light" },
-    ];
+    if (!user) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sky-300 via-pink-200 to-pink-300">
+                <div className="text-center">
+                    <div className="text-6xl mb-4">🔒</div>
+                    <p className="text-xl font-bold text-gray-700">請先登入</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-wawag-cream pb-24 relative overflow-hidden">
@@ -335,7 +346,7 @@ export default function DashboardPage() {
                             <motion.button
                                 whileHover={{ scale: 1.05, y: -2 }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={() => router.push("/scanner")}
+                                onClick={() => router.push("/scan")}
                                 className="relative px-6 py-3 bg-gradient-to-b from-purple-400 to-purple-600 hover:from-purple-500 hover:to-purple-700 rounded-xl font-bold text-white shadow-lg transition-all"
                             >
                                 <span className="relative z-10">🎯 GRAB PRIZE</span>
