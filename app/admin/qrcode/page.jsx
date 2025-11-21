@@ -52,14 +52,16 @@ export default function AdminQRCodePage() {
             const data = await res.json();
 
             if (res.ok) {
+                toast.success(`成功產生代碼！\n${data.codeId}`);
+                setPoints("");
                 setGeneratedCode(data);
-                toast.success("QR Code 已產生！🎟️");
             } else {
-                toast.error(data.error || "產生失敗");
+                console.error("Generate failed:", data);
+                toast.error(`產生失敗: ${data.error || "未知錯誤"}`);
             }
-
         } catch (error) {
-            toast.error("產生代碼失敗");
+            console.error(error);
+            toast.error(`發生錯誤: ${error.message}`);
         } finally {
             setLoading(false);
         }
