@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export const runtime = 'edge';
 
-import { adminDb } from "@/lib/firebase-admin"; // Assuming we have admin SDK or using client SDK with rules? 
+// import { adminDb } from "@/lib/firebase-admin"; // Removed for Edge Compatibility 
 // Wait, the prompt says "Do not modify firebase init". 
 // If I don't have admin SDK, I must use the client SDK in the API route? 
 // Actually, usually API routes use Admin SDK to bypass rules, but if I can't add new files/init...

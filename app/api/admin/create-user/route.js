@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 
 export const runtime = 'edge';
 
-import { adminAuth, adminDb } from "@/lib/firebase-admin";
+import { db } from "@/lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 const ADMIN_EMAILS = ["admin@example.com", "allenlu@example.com"];
 
@@ -12,13 +13,6 @@ export async function POST(request) {
         const adminEmail = request.headers.get("x-admin-email");
         if (!adminEmail || !ADMIN_EMAILS.includes(adminEmail)) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-        }
-
-        // Check if Admin SDK is initialized
-        if (!adminAuth || !adminDb) {
-            return NextResponse.json({
-                error: "Firebase Admin SDK not initialized. Please configure service account credentials."
-            }, { status: 500 });
         }
 
         const { name, email, password } = await request.json();
@@ -32,15 +26,44 @@ export async function POST(request) {
             return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
         }
 
-        // Create Firebase Auth user
-        const userRecord = await adminAuth.createUser({
-            email: email,
-            password: password,
-            displayName: name,
+        // 1. Create User via Firebase Auth REST API
+        const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+        const signUpUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`;
+
+        const signUpRes = await fetch(signUpUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                email,
+                password,
+                returnSecureToken: true
+            })
         });
 
-        // Create Firestore user document
-        await adminDb.collection("users").doc(userRecord.uid).set({
+        const signUpData = await signUpRes.json();
+
+        if (!signUpRes.ok) {
+            throw new Error(signUpData.error?.message || "Failed to create user in Auth");
+        }
+
+        const uid = signUpData.localId;
+        const idToken = signUpData.idToken;
+
+        // 2. Update Profile (Display Name)
+        const updateProfileUrl = `https://identitytoolkit.googleapis.com/v1/accounts:update?key=${apiKey}`;
+        await fetch(updateProfileUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                idToken,
+                displayName: name,
+                returnSecureToken: false
+            })
+        });
+
+        // 3. Create Firestore Document (Using Client SDK which works on Edge)
+        await setDoc(doc(db, "users", uid), {
+            uid: uid,
             displayName: name,
             email: email,
             points: 0,
@@ -49,29 +72,17 @@ export async function POST(request) {
             monthlyGiftClaimedAt: null,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            avatar: `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${userRecord.uid}`,
+            avatar: `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${uid}`,
         });
 
         return NextResponse.json({
             success: true,
-            uid: userRecord.uid,
+            uid: uid,
             message: "User created successfully"
         });
 
     } catch (error) {
         console.error("Create User Error:", error);
-
-        // Handle specific Firebase errors
-        if (error.code === "auth/email-already-exists") {
-            return NextResponse.json({ error: "Email already exists" }, { status: 400 });
-        }
-        if (error.code === "auth/invalid-email") {
-            return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
-        }
-        if (error.code === "auth/weak-password") {
-            return NextResponse.json({ error: "Password is too weak" }, { status: 400 });
-        }
-
         return NextResponse.json({
             error: error.message || "Failed to create user"
         }, { status: 500 });
