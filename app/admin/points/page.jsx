@@ -12,13 +12,21 @@ export default function AdminPointsPage() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    // Assuming these new states are intended to be added for the new handleUpdatePoints logic
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [pointsAmount, setPointsAmount] = useState("");
+    const [showModal, setShowModal] = useState(false);
+
 
     useEffect(() => {
         const fetchUsers = async () => {
             try {
+                if (!user) return;
+                const token = await user.getIdToken();
+
                 const res = await fetch("/api/admin/get-users", {
                     headers: {
-                        "x-admin-email": user?.email || ""
+                        "Authorization": `Bearer ${token}`
                     }
                 });
 
@@ -28,49 +36,68 @@ export default function AdminPointsPage() {
                 setUsers(data.users || []);
             } catch (error) {
                 console.error(error);
-                toast.error("載入使用者失敗");
+                toast.error("載入會員失敗");
             } finally {
                 setLoading(false);
             }
         };
 
-        // Fetch immediately, assuming admin access
-        fetchUsers();
+        if (user) {
+            fetchUsers();
+        }
     }, [user]);
 
-    const handleAdjustPoints = async (uid, amount) => {
+    const handleUpdatePoints = async (e) => {
+        e.preventDefault();
+        if (!selectedUser) return;
+
+        const amount = parseInt(pointsAmount);
+        if (isNaN(amount) || amount === 0) {
+            toast.error("請輸入有效的點數");
+            return;
+        }
+
         // Optimistic Update
-        const previousUsers = [...users];
-        const targetUser = users.find(u => u.uid === uid);
+        const oldUsers = [...users];
+        setUsers(users.map(u => {
+            if (u.uid === selectedUser.uid) {
+                return { ...u, points: (u.points || 0) + amount };
+            }
+            return u;
+        }));
 
-        if (!targetUser) return;
-
-        setUsers(users.map(u =>
-            u.uid === uid ? {
-                ...u,
-                points: (u.points || 0) + amount,
-                updatedAt: new Date().toISOString()
-            } : u
-        ));
+        setShowModal(false);
+        toast.loading("更新點數中...", { id: "update-points" });
 
         try {
+            const token = await user.getIdToken();
             const res = await fetch("/api/admin/update-points", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-admin-email": user?.email || ""
+                    "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify({ userId: uid, amount })
+                body: JSON.stringify({
+                    userId: selectedUser.uid,
+                    amount: amount
+                })
             });
 
-            if (!res.ok) throw new Error("Update failed");
-
-            const action = amount > 0 ? "已增加" : "已扣除";
-            toast.success(`${action} ${Math.abs(amount)} 點數給 ${targetUser.name}`);
-
+            if (res.ok) {
+                toast.success("點數更新成功！✨", { id: "update-points" });
+                // Refresh to get exact server state
+                const refreshRes = await fetch("/api/admin/get-users", {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                const refreshData = await refreshRes.json();
+                setUsers(refreshData.users || []);
+            } else {
+                throw new Error("Update failed");
+            }
         } catch (error) {
-            toast.error("更新點數失敗");
-            setUsers(previousUsers); // Rollback
+            console.error(error);
+            toast.error("更新失敗，還原變更", { id: "update-points" });
+            setUsers(oldUsers); // Revert
         }
     };
 

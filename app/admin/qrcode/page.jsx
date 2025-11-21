@@ -39,11 +39,12 @@ export default function AdminQRCodePage() {
         setGeneratedCode(null);
 
         try {
+            const token = await user.getIdToken();
             const res = await fetch("/api/admin/generate-code", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-admin-email": user?.email || ""
+                    "Authorization": `Bearer ${token}`
                 },
                 body: JSON.stringify({ points: Number(points) }),
             });
@@ -68,10 +69,11 @@ export default function AdminQRCodePage() {
         if (!confirm("確定要刪除此代碼嗎？")) return;
 
         try {
+            const token = await user.getIdToken();
             const res = await fetch(`/api/admin/delete-code?id=${id}`, {
                 method: "DELETE",
                 headers: {
-                    "x-admin-email": user?.email || ""
+                    "Authorization": `Bearer ${token}`
                 }
             });
 

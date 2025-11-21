@@ -1,17 +1,22 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase";
-import { doc, setDoc } from "firebase/firestore";
+import { verifyIdToken, createDocument } from "@/lib/firestoreRest";
 
 export const runtime = 'edge';
-
 
 const ADMIN_EMAILS = ["admin@example.com", "allenlu@example.com"];
 
 export async function POST(request) {
     try {
         // Verify admin authorization
-        const adminEmail = request.headers.get("x-admin-email");
-        if (!adminEmail || !ADMIN_EMAILS.includes(adminEmail)) {
+        const authHeader = request.headers.get("Authorization");
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return NextResponse.json({ error: "未經授權" }, { status: 403 });
+        }
+
+        const token = authHeader.split("Bearer ")[1];
+        const userInfo = await verifyIdToken(token);
+
+        if (!userInfo || !ADMIN_EMAILS.includes(userInfo.email)) {
             return NextResponse.json({ error: "未經授權" }, { status: 403 });
         }
 
@@ -61,8 +66,13 @@ export async function POST(request) {
             })
         });
 
-        // 3. Create Firestore Document (Using Client SDK which works on Edge)
-        await setDoc(doc(db, "users", uid), {
+        // 3. Create Firestore Document via REST API
+        // Note: We use the ADMIN's token to create the document, because the new user
+        // might not have permission to create their own document if rules are strict?
+        // Actually, usually users can create their own doc.
+        // But here we are admin creating for them.
+        // If we use 'token' (Admin Token), it works if Admin has write permission.
+        await createDocument("users", {
             uid: uid,
             displayName: name,
             email: email,
@@ -70,10 +80,10 @@ export async function POST(request) {
             totalPointsEarned: 0,
             vipStatus: false,
             monthlyGiftClaimedAt: null,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
             avatar: `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${uid}`,
-        });
+        }, token, uid);
 
         return NextResponse.json({
             success: true,

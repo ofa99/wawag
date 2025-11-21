@@ -16,10 +16,12 @@ export default function AdminUsersPage() {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                // In a real app, we'd get the token here. For this phase, we send the email header.
+                if (!user) return;
+                const token = await user.getIdToken();
+
                 const res = await fetch("/api/admin/get-users", {
                     headers: {
-                        "x-admin-email": user?.email || "" // Use real admin email
+                        "Authorization": `Bearer ${token}`
                     }
                 });
 
@@ -37,9 +39,6 @@ export default function AdminUsersPage() {
 
         if (user) {
             fetchUsers();
-        } else {
-            // Allow fetching even if user context is slow for dev, or handle redirect
-            fetchUsers();
         }
     }, [user]);
 
@@ -51,11 +50,12 @@ export default function AdminUsersPage() {
         toast.loading("建立會員中...", { id: "create-member" });
 
         try {
+            const token = await user.getIdToken();
             const res = await fetch("/api/admin/create-user", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "x-admin-email": user?.email || ""
+                    "Authorization": `Bearer ${token}`
                 },
                 body: JSON.stringify({
                     name: newMember.name,
@@ -72,7 +72,12 @@ export default function AdminUsersPage() {
                 setNewMember({ name: "", email: "", password: "" });
 
                 // Refresh user list
-                fetchUsers();
+                const token = await user.getIdToken();
+                const refreshRes = await fetch("/api/admin/get-users", {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                const refreshData = await refreshRes.json();
+                setUsers(refreshData.users || []);
             } else {
                 toast.error(data.error || "建立會員失敗", { id: "create-member" });
             }

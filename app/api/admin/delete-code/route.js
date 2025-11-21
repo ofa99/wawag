@@ -1,35 +1,36 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase";
-import { doc, deleteDoc, getDoc } from "firebase/firestore";
+import { verifyIdToken, deleteDocument } from "@/lib/firestoreRest";
 
 export const runtime = 'edge';
-
 
 // Placeholder Admin List
 const ADMIN_EMAILS = ["admin@example.com", "allenlu@example.com"];
 
 export async function DELETE(request) {
     try {
-        const adminEmail = request.headers.get("x-admin-email");
-        const { searchParams } = new URL(request.url);
-        const id = searchParams.get("id");
-
-        if (!adminEmail || !ADMIN_EMAILS.includes(adminEmail)) {
+        const authHeader = request.headers.get("Authorization");
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
             return NextResponse.json({ error: "未經授權" }, { status: 401 });
         }
+
+        const token = authHeader.split("Bearer ")[1];
+        const userInfo = await verifyIdToken(token);
+
+        if (!userInfo || !ADMIN_EMAILS.includes(userInfo.email)) {
+            return NextResponse.json({ error: "未經授權" }, { status: 401 });
+        }
+
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get("id");
 
         if (!id) {
             return NextResponse.json({ error: "缺少代碼 ID" }, { status: 400 });
         }
 
-        const codeRef = doc(db, "codes", id);
-        const codeSnap = await getDoc(codeRef);
-
-        if (!codeSnap.exists()) {
-            return NextResponse.json({ error: "找不到代碼" }, { status: 404 });
-        }
-
-        await deleteDoc(codeRef);
+        // Delete via REST API
+        // Note: REST API delete returns success even if doc doesn't exist usually, 
+        // or 404 if we check. Our helper throws if not ok.
+        await deleteDocument("codes", id, token);
 
         return NextResponse.json({ success: true });
 

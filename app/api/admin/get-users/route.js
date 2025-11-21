@@ -1,52 +1,50 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase";
-import { collection, getDocs, query } from "firebase/firestore";
+import { verifyIdToken, getCollection } from "@/lib/firestoreRest";
 import { getLevel } from "@/utils/calcLevel";
 
 export const runtime = 'edge';
 
-
-// Placeholder Admin List - In production, use custom claims or a database role field
 const ADMIN_EMAILS = ["admin@example.com", "allenlu@example.com"];
 
 export async function GET(request) {
     try {
-        // 1. Basic Admin Verification (Header-based for now, or query param)
-        // Since we don't have session management in API routes easily without cookies/headers
-        // We will assume the client sends a 'x-admin-email' header for this phase as a simple check
-        // In a real app, we would verify the Firebase Auth ID Token here.
-
-        const adminEmail = request.headers.get("x-admin-email");
-
-        if (!adminEmail || !ADMIN_EMAILS.includes(adminEmail)) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        // 1. Verify Admin Token
+        const authHeader = request.headers.get("Authorization");
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return NextResponse.json({ error: "未經授權" }, { status: 401 });
         }
 
-        // 2. Fetch Users
-        const q = query(collection(db, "users"));
-        const querySnapshot = await getDocs(q);
+        const token = authHeader.split("Bearer ")[1];
+        const userInfo = await verifyIdToken(token);
 
-        const users = [];
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            const points = data.totalPointsEarned || data.points || 0; // Support both fields if legacy exists
+        if (!userInfo || !ADMIN_EMAILS.includes(userInfo.email)) {
+            return NextResponse.json({ error: "未經授權" }, { status: 403 });
+        }
 
-            users.push({
-                uid: doc.id,
+        // 2. Fetch Users via REST API
+        // We reuse the admin's token to make the request to Firestore
+        // This works because the admin user has permission in Security Rules
+        const rawUsers = await getCollection("users", token);
+
+        const users = rawUsers.map(data => {
+            const points = data.totalPointsEarned || data.points || 0;
+
+            return {
+                uid: data.id,
                 name: data.displayName || "Unknown",
                 email: data.email || "",
                 points: points,
                 level: getLevel(points),
-                monthlyGiftClaimedAt: data.monthlyGiftClaimedAt ? data.monthlyGiftClaimedAt.toDate().toISOString() : null,
-                avatar: data.avatar || `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${doc.id}`,
+                monthlyGiftClaimedAt: data.monthlyGiftClaimedAt || null,
+                avatar: data.avatar || `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${data.id}`,
                 updatedAt: data.updatedAt || null
-            });
+            };
         });
 
         return NextResponse.json({ users });
 
     } catch (error) {
         console.error("Get Users Error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ error: "伺服器內部錯誤" }, { status: 500 });
     }
 }

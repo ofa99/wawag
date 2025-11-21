@@ -1,20 +1,22 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-// import crypto from "crypto"; // Use global crypto in Edge
+import { verifyIdToken, createDocument } from "@/lib/firestoreRest";
 
 export const runtime = 'edge';
 
-
-// Placeholder Admin List - In production, use custom claims or a database role field
 const ADMIN_EMAILS = ["admin@example.com", "allenlu@example.com"];
 
 export async function POST(request) {
     try {
-        // 1. Basic Admin Verification
-        const adminEmail = request.headers.get("x-admin-email");
+        // 1. Verify Admin Token
+        const authHeader = request.headers.get("Authorization");
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return NextResponse.json({ error: "未經授權" }, { status: 401 });
+        }
 
-        if (!adminEmail || !ADMIN_EMAILS.includes(adminEmail)) {
+        const token = authHeader.split("Bearer ")[1];
+        const userInfo = await verifyIdToken(token);
+
+        if (!userInfo || !ADMIN_EMAILS.includes(userInfo.email)) {
             return NextResponse.json({ error: "未經授權" }, { status: 401 });
         }
 
@@ -29,16 +31,14 @@ export async function POST(request) {
         // 3. Generate Unique Code
         const codeId = `WAWAG-${globalThis.crypto.randomUUID().split('-')[0].toUpperCase()}`;
 
-        // 4. Save to Firestore
-        const codeData = {
+        // 4. Save to Firestore via REST API
+        await createDocument("codes", {
             codeId,
             points,
             isUsed: false,
-            createdAt: serverTimestamp(),
+            createdAt: new Date(),
             usedAt: null
-        };
-
-        await addDoc(collection(db, "codes"), codeData);
+        }, token);
 
         // 5. Return Response
         return NextResponse.json({
