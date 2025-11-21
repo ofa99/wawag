@@ -11,12 +11,13 @@ export async function GET(request) {
         }
 
         const token = authHeader.split("Bearer ")[1];
-        // Verify token but don't restrict to admin, as users also need to see gifts
         const userInfo = await verifyIdToken(token);
 
         if (!userInfo) {
             return NextResponse.json({ error: "無效的 Token" }, { status: 403 });
         }
+
+        // No admin check - all authenticated users can view gifts
 
         const rawGifts = await getCollection("gifts", token);
 

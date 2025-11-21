@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { verifyIdToken, updateDocument } from "@/lib/firestoreRest";
+import { isUserAdmin } from "@/lib/adminAuth";
 
 export const runtime = 'edge';
 
-const ADMIN_EMAILS = ["abc@gmail.com", "allenlu@example.com"];
 
 export async function POST(request) {
     try {

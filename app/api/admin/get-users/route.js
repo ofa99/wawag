@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { verifyIdToken, getCollection } from "@/lib/firestoreRest";
 import { getLevel } from "@/utils/calcLevel";
+import { isUserAdmin } from "@/lib/adminAuth";
 
 export const runtime = 'edge';
-
-const ADMIN_EMAILS = ["abc@gmail.com", "allenlu@example.com"];
 
 export async function GET(request) {
     try {
@@ -17,8 +16,14 @@ export async function GET(request) {
         const token = authHeader.split("Bearer ")[1];
         const userInfo = await verifyIdToken(token);
 
-        if (!userInfo || !ADMIN_EMAILS.includes(userInfo.email)) {
-            return NextResponse.json({ error: "未經授權" }, { status: 403 });
+        if (!userInfo) {
+            return NextResponse.json({ error: "無效的 Token" }, { status: 403 });
+        }
+
+        // Check if user is admin
+        const isAdmin = await isUserAdmin(userInfo, token);
+        if (!isAdmin) {
+            return NextResponse.json({ error: "權限不足" }, { status: 403 });
         }
 
         // 2. Fetch Users via REST API

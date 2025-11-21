@@ -38,29 +38,40 @@ export default function AdminLayout({ children }) {
                 return;
             }
 
-            // 1. Check Hardcoded List first (Fastest)
-            if (ADMIN_EMAILS.includes(user.email)) {
-                setIsAuthorized(true);
-                setChecking(false);
-                return;
-            }
-
-            // 2. Check Firestore Profile
             try {
+                // 1. Check Hardcoded List first (Fastest)
+                if (ADMIN_EMAILS.includes(user.email)) {
+                    setIsAuthorized(true);
+                    setChecking(false);
+                    return;
+                }
+
+                // 2. Check Firestore Profile
                 const userDocRef = doc(db, "users", user.uid);
                 const userDoc = await getDoc(userDocRef);
 
-                if (userDoc.exists() && userDoc.data().isAdmin === true) {
-                    setIsAuthorized(true);
-                } else {
-                    toast.error("未經授權的存取");
-                    router.push("/dashboard");
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    if (userData.isAdmin === true) {
+                        setIsAuthorized(true);
+                        setChecking(false);
+                        return;
+                    }
                 }
+
+                // Not authorized
+                toast.error("未經授權的存取");
+                router.push("/dashboard");
+                setChecking(false);
             } catch (e) {
                 console.error("Admin Check Error:", e);
-                toast.error("驗證失敗");
-                router.push("/dashboard");
-            } finally {
+                // On error, deny access unless in hardcoded list
+                if (ADMIN_EMAILS.includes(user.email)) {
+                    setIsAuthorized(true);
+                } else {
+                    toast.error("驗證失敗，請重新登入");
+                    router.push("/admin/login");
+                }
                 setChecking(false);
             }
         };

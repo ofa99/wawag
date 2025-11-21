@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { verifyIdToken, updateDocument, getCollection } from "@/lib/firestoreRest";
+import { isUserAdmin } from "@/lib/adminAuth";
 
 export const runtime = 'edge';
 
-const ADMIN_EMAILS = ["abc@gmail.com", "allenlu@example.com"];
 
 export async function POST(request) {
     try {
@@ -15,7 +15,13 @@ export async function POST(request) {
         const token = authHeader.split("Bearer ")[1];
         const userInfo = await verifyIdToken(token);
 
-        if (!userInfo || !ADMIN_EMAILS.includes(userInfo.email)) {
+        if (!userInfo) {
+            return NextResponse.json({ error: "無效的 Token" }, { status: 403 });
+        }
+
+        // Check if user is admin
+        const isAdmin = await isUserAdmin(userInfo, token);
+        if (!isAdmin) {
             return NextResponse.json({ error: "未經授權" }, { status: 401 });
         }
 
