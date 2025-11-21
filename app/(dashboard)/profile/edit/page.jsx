@@ -42,6 +42,10 @@ export default function EditProfilePage() {
                 const userDoc = await getDoc(doc(db, "users", user.uid));
                 if (userDoc.exists()) {
                     const data = userDoc.data();
+                    console.log("Fetched user data:", data);
+                    console.log("Phone:", data.phone);
+                    console.log("LINE ID:", data.lineId);
+
                     setProfileData({
                         displayName: data.displayName || "",
                         photoURL: data.photoURL || data.avatar || "",
@@ -55,6 +59,8 @@ export default function EditProfilePage() {
                         phone: !data.phone,
                         lineId: !data.lineId
                     });
+                } else {
+                    console.log("User document does not exist!");
                 }
             } catch (error) {
                 console.error("Error fetching profile:", error);
