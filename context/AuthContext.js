@@ -13,16 +13,7 @@ export const AuthContextProvider = ({ children }) => {
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                setUser({
-                    uid: user.uid,
-                    email: user.email,
-                    displayName: user.displayName,
-                    photoURL: user.photoURL,
-                });
-            } else {
-                setUser(null);
-            }
+            setUser(user); // Store the full Firebase User object
             setLoading(false);
         });
 
