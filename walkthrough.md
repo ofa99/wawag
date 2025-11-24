@@ -1,28 +1,29 @@
 # QR Code Scanning Fix Walkthrough
 
 ## Problem
-The user reported that they could not scan QR codes to redeem points. The issue was likely due to:
-1.  **Frontend Scanner Issues**: `Html5QrcodeScanner` lifecycle management in React `useEffect` was fragile, potentially causing initialization errors or permission issues.
-2.  **API Race Condition**: The `claim-code` API had a race condition where multiple concurrent requests could claim the same code.
+The user reported that:
+1.  Scanning QR codes (especially via image upload) would hang on "Processing..."
+2.  Points were not being transferred.
+
+This was likely due to:
+-   **URL in QR Code**: The QR code might contain a full URL (e.g., `https://.../CODE`) instead of just the code ID. The backend would fail to find this exact string, and potentially the error handling wasn't robust enough.
+-   **State Hanging**: If the API call failed or took too long, the `isProcessing` state might not have been reset, locking the UI.
 
 ## Changes
 
 ### Frontend (`app/(dashboard)/scan/page.jsx`)
--   **Robust Lifecycle Management**: Improved `useEffect` cleanup to ensure the scanner is properly cleared when the component unmounts.
--   **Manual Input Fallback**: Added a manual input field so users can type the code if the camera fails or permissions are denied.
--   **Better State Handling**: Added `isProcessing` state to prevent multiple submissions and manage scanner pause/resume during API calls.
--   **UI Improvements**: Added a visual separator and improved the layout.
+-   **URL Parsing**: Added logic to detect if the scanned text is a URL. If so, it attempts to extract the code ID from the path or query parameters.
+-   **Safety Timeout**: Added a 10-second timeout to automatically reset the `isProcessing` state and resume the scanner if the API call hangs.
+-   **Logging**: Added console logs to help debug what is actually being scanned.
 
 ### Backend (`app/api/claim-code/route.js`)
--   **Race Condition Fix**: Refactored the transaction logic.
-    -   Previously, the code queried the document *outside* the transaction lock (implicitly via `getDocs` which is not transactional), then updated it.
-    -   Now, it queries the document ID first, then performs a `transaction.get()` on that specific document ID to ensure the read is locked and atomic. This prevents double-claiming.
+-   **Race Condition Fix**: (Previously applied) Refactored the transaction logic to ensure atomic updates and prevent double-claiming.
 
 ## Verification
--   **Manual Code Entry**: Users can now manually enter the code if scanning fails.
--   **Scanner Stability**: The scanner should now handle component mounts/unmounts more gracefully.
--   **Data Integrity**: The API now prevents double-spending of codes.
+-   **Image Upload**: Uploading an image with a QR code (even if it's a URL) should now correctly extract the code ID.
+-   **Timeout**: If the network is slow or the API hangs, the "Processing..." state will automatically reset after 10 seconds, allowing the user to try again.
+-   **Manual Code Entry**: Remains available as a fallback.
 
 ## Next Steps
--   Ask the user to test the scanning functionality on their device.
--   If scanning still fails (e.g., due to specific browser/device restrictions), the manual input serves as a reliable backup.
+-   Ask the user to try scanning the image again.
+-   If it still fails, ask them to check the console logs (if possible) or try the manual input with the code seen in the image (e.g., `WAWAG-ED21A8D0`).

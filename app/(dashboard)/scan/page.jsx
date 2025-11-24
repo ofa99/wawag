@@ -38,26 +38,54 @@ export default function ScanPage() {
         if (isProcessing) return;
         setIsProcessing(true);
 
+        // Safety timeout to reset processing state
+        const safetyTimeout = setTimeout(() => {
+            setIsProcessing(false);
+            if (scannerInstance) scannerInstance.resume();
+        }, 10000);
+
         if (scannerInstance) {
             scannerInstance.pause();
         }
 
         try {
+            // Extract code from URL if present
+            let cleanCode = code;
+            try {
+                const url = new URL(code);
+                // Assuming the code is the last part of the path or a query param
+                // Example 1: https://wawag.com/claim/CODE123 -> CODE123
+                // Example 2: https://wawag.com?code=CODE123 -> CODE123
+                const pathParts = url.pathname.split('/').filter(p => p);
+                if (pathParts.length > 0) {
+                    cleanCode = pathParts[pathParts.length - 1];
+                } else if (url.searchParams.has('code')) {
+                    cleanCode = url.searchParams.get('code');
+                }
+            } catch (e) {
+                // Not a URL, use as is
+                cleanCode = code;
+            }
+
+            console.log("Scanned code:", code, "Cleaned code:", cleanCode);
+
             // Call API to claim code
             const res = await fetch("/api/claim-code", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    codeId: code,
+                    codeId: cleanCode,
                     uid: auth.currentUser?.uid
                 })
             });
 
             const data = await res.json();
 
+            clearTimeout(safetyTimeout);
+
             if (data.success) {
                 toast.success(`耶！+${data.points} 點！🎉`);
-                setScanResult(code);
+                setScanResult(cleanCode);
                 if (scannerInstance) {
                     scannerInstance.clear();
                 }
