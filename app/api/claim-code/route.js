@@ -72,6 +72,17 @@ export async function POST(request) {
                 usedBy: uid
             });
 
+            // 5. Create Transaction Record
+            const txRef = doc(db, "transactions", crypto.randomUUID());
+            transaction.set(txRef, {
+                uid,
+                amount: codeData.points,
+                type: "QR_CODE",
+                codeId: codeId,
+                description: `兌換代碼: ${codeId}`,
+                createdAt: serverTimestamp()
+            });
+
             return codeData.points;
         });
 
