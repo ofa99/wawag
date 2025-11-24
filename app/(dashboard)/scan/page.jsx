@@ -10,6 +10,9 @@ export default function ScanPage() {
     const [scanResult, setScanResult] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [manualCode, setManualCode] = useState("");
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [earnedPoints, setEarnedPoints] = useState(0);
+    const router = useRouter();
 
     useEffect(() => {
         const scanner = new Html5QrcodeScanner(
@@ -53,9 +56,6 @@ export default function ScanPage() {
             let cleanCode = code;
             try {
                 const url = new URL(code);
-                // Assuming the code is the last part of the path or a query param
-                // Example 1: https://wawag.com/claim/CODE123 -> CODE123
-                // Example 2: https://wawag.com?code=CODE123 -> CODE123
                 const pathParts = url.pathname.split('/').filter(p => p);
                 if (pathParts.length > 0) {
                     cleanCode = pathParts[pathParts.length - 1];
@@ -63,13 +63,11 @@ export default function ScanPage() {
                     cleanCode = url.searchParams.get('code');
                 }
             } catch (e) {
-                // Not a URL, use as is
                 cleanCode = code;
             }
 
             console.log("Scanned code:", code, "Cleaned code:", cleanCode);
 
-            // Call API to claim code
             const res = await fetch("/api/claim-code", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -84,7 +82,8 @@ export default function ScanPage() {
             clearTimeout(safetyTimeout);
 
             if (data.success) {
-                toast.success(`耶！+${data.points} 點！🎉`);
+                setEarnedPoints(data.points);
+                setShowSuccessModal(true);
                 setScanResult(cleanCode);
                 if (scannerInstance) {
                     scannerInstance.clear();
@@ -112,8 +111,12 @@ export default function ScanPage() {
         handleClaim(manualCode);
     };
 
+    const handleConfirmSuccess = () => {
+        router.push("/dashboard");
+    };
+
     return (
-        <div className="p-4 flex flex-col items-center space-y-6 pb-20">
+        <div className="p-4 flex flex-col items-center space-y-6 pb-20 relative">
             <div className="text-center space-y-2">
                 <h1 className="text-2xl font-bold text-wawag-blue">掃描 QR Code</h1>
                 <p className="text-gray-500">將鏡頭對準機台的 QR Code</p>
@@ -148,9 +151,24 @@ export default function ScanPage() {
                 </form>
             </div>
 
-            {scanResult && (
-                <div className="text-center p-4 bg-green-100 text-green-700 rounded-xl w-full max-w-md">
-                    已成功兌換: {scanResult}
+            {/* Success Modal */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full text-center transform transition-all scale-100">
+                        <div className="text-6xl mb-4 animate-bounce">🎉</div>
+                        <h2 className="text-2xl font-black text-wawag-purple mb-2">恭喜獲得！</h2>
+                        <div className="text-5xl font-black text-yellow-500 mb-2 drop-shadow-md">
+                            {earnedPoints}
+                        </div>
+                        <p className="text-gray-500 font-bold mb-6">點數</p>
+
+                        <button
+                            onClick={handleConfirmSuccess}
+                            className="w-full bg-gradient-to-r from-wawag-blue to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform transition hover:scale-105 active:scale-95"
+                        >
+                            確認
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

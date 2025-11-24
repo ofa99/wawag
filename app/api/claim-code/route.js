@@ -29,7 +29,12 @@ export async function POST(request) {
         // Use Transaction for atomicity
         const result = await runTransaction(db, async (transaction) => {
             const codeDocRef = doc(db, "codes", codeDocId);
-            const codeDoc = await transaction.get(codeDocRef);
+            const userRef = doc(db, "users", uid);
+
+            const [codeDoc, userDoc] = await Promise.all([
+                transaction.get(codeDocRef),
+                transaction.get(userRef)
+            ]);
 
             if (!codeDoc.exists()) {
                 throw new Error("無效的代碼");
@@ -42,13 +47,23 @@ export async function POST(request) {
                 throw new Error("代碼已使用");
             }
 
-            // 3. Update User Points
-            const userRef = doc(db, "users", uid);
-            transaction.update(userRef, {
-                points: increment(codeData.points),
-                totalPointsEarned: increment(codeData.points),
-                updatedAt: serverTimestamp()
-            });
+            // 3. Update or Create User Points
+            if (!userDoc.exists()) {
+                transaction.set(userRef, {
+                    points: codeData.points,
+                    totalPointsEarned: codeData.points,
+                    level: 1,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                    uid: uid
+                });
+            } else {
+                transaction.update(userRef, {
+                    points: increment(codeData.points),
+                    totalPointsEarned: increment(codeData.points),
+                    updatedAt: serverTimestamp()
+                });
+            }
 
             // 4. Mark Code as Used
             transaction.update(codeDocRef, {

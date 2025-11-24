@@ -4,26 +4,25 @@
 The user reported that:
 1.  Scanning QR codes (especially via image upload) would hang on "Processing..."
 2.  Points were not being transferred.
-
-This was likely due to:
--   **URL in QR Code**: The QR code might contain a full URL (e.g., `https://.../CODE`) instead of just the code ID. The backend would fail to find this exact string, and potentially the error handling wasn't robust enough.
--   **State Hanging**: If the API call failed or took too long, the `isProcessing` state might not have been reset, locking the UI.
+3.  **New Request**: Wanted a success modal instead of a toast, and redirection to the dashboard.
+4.  **New Issue**: Points were 0 even after redemption (likely due to missing user document).
 
 ## Changes
 
 ### Frontend (`app/(dashboard)/scan/page.jsx`)
--   **URL Parsing**: Added logic to detect if the scanned text is a URL. If so, it attempts to extract the code ID from the path or query parameters.
--   **Safety Timeout**: Added a 10-second timeout to automatically reset the `isProcessing` state and resume the scanner if the API call hangs.
--   **Logging**: Added console logs to help debug what is actually being scanned.
+-   **URL Parsing**: Added logic to detect if the scanned text is a URL.
+-   **Safety Timeout**: Added a 10-second timeout to reset the `isProcessing` state.
+-   **Success Modal**: Replaced the simple toast notification with a "Congratulations" modal showing the earned points.
+-   **Redirection**: The modal has a "Confirm" button that redirects the user to `/dashboard`.
 
 ### Backend (`app/api/claim-code/route.js`)
--   **Race Condition Fix**: (Previously applied) Refactored the transaction logic to ensure atomic updates and prevent double-claiming.
+-   **Race Condition Fix**: Refactored transaction logic.
+-   **User Document Creation**: Modified the transaction to check if the user's document exists. If not (e.g., first time user or incomplete setup), it creates the document with the earned points instead of failing silently or throwing an error on `update`.
 
 ## Verification
--   **Image Upload**: Uploading an image with a QR code (even if it's a URL) should now correctly extract the code ID.
--   **Timeout**: If the network is slow or the API hangs, the "Processing..." state will automatically reset after 10 seconds, allowing the user to try again.
--   **Manual Code Entry**: Remains available as a fallback.
+-   **UX Flow**: Scan -> Success Modal -> Click Confirm -> Redirect to Dashboard -> See updated points.
+-   **Data Integrity**: Even if a user has no prior record in the `users` collection, redeeming a code will now correctly initialize their account with points.
 
 ## Next Steps
--   Ask the user to try scanning the image again.
--   If it still fails, ask them to check the console logs (if possible) or try the manual input with the code seen in the image (e.g., `WAWAG-ED21A8D0`).
+-   Deploy changes.
+-   Ask user to test the full flow.
