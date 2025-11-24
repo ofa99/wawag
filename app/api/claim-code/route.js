@@ -1,95 +1,113 @@
 import { NextResponse } from "next/server";
-import { adminDb, admin } from "@/lib/firebase-admin";
+import { getAccessToken } from "@/lib/serviceAccountAuth";
+import { runTransaction, getCollection } from "@/lib/firestoreRest";
 
-// Admin SDK requires Node.js runtime, not Edge
-// export const runtime = 'edge'; 
+export const runtime = 'edge';
 
 export async function POST(request) {
     try {
-        const body = await request.json();
-        const { codeId, uid } = body;
+        const { code, uid } = await request.json();
 
-        if (!codeId || !uid) {
-            return NextResponse.json({ success: false, message: "缺少代碼 ID 或使用者 ID" }, { status: 400 });
+        if (!code || !uid) {
+            return NextResponse.json({ error: "無效的請求" }, { status: 400 });
         }
 
-        if (!adminDb) {
-            return NextResponse.json({ success: false, message: "Server Error: Admin SDK not initialized" }, { status: 500 });
+        const adminToken = await getAccessToken();
+
+        // 1. Find the code document ID first (Query)
+        const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+        const queryUrl = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents:runQuery`;
+
+        const queryRes = await fetch(queryUrl, {
+            method: 'POST',
+            headers: {
+                "Authorization": `Bearer ${adminToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                structuredQuery: {
+                    from: [{ collectionId: "codes" }],
+                    where: {
+                        fieldFilter: {
+                            field: { fieldPath: "code" },
+                            op: "EQUAL",
+                            value: { stringValue: code }
+                        }
+                    },
+                    limit: 1
+                }
+            })
+        });
+
+        if (!queryRes.ok) throw new Error("Failed to query code");
+        const queryData = await queryRes.json();
+
+        if (!queryData[0]?.document) {
+            return NextResponse.json({ error: "無效的代碼" }, { status: 404 });
         }
 
-        // 1. Find the code document (Query first to get ID)
-        const codesRef = adminDb.collection("codes");
-        const snapshot = await codesRef.where("codeId", "==", codeId).get();
+        const codeDocRaw = queryData[0].document;
+        const codeId = codeDocRaw.name.split('/').pop();
 
-        if (snapshot.empty) {
-            return NextResponse.json({ success: false, message: "無效的代碼" }, { status: 400 });
-        }
+        // 2. Run Transaction
+        await runTransaction(adminToken, async (transaction) => {
+            // Read Code Doc
+            const codeDoc = await transaction.get("codes", codeId);
+            if (!codeDoc.exists) throw "Code not found";
 
-        const codeDocSnapshot = snapshot.docs[0];
-        const codeDocId = codeDocSnapshot.id;
-
-        // Use Transaction for atomicity
-        const result = await adminDb.runTransaction(async (transaction) => {
-            const codeDocRef = adminDb.collection("codes").doc(codeDocId);
-            const userRef = adminDb.collection("users").doc(uid);
-
-            const codeDoc = await transaction.get(codeDocRef);
-            const userDoc = await transaction.get(userRef);
-
-            if (!codeDoc.exists) {
-                throw new Error("無效的代碼");
-            }
-
-            const codeData = codeDoc.data();
-
-            // 2. Check if used
-            if (codeData.isUsed) {
+            if (codeDoc.data.isUsed) {
                 throw new Error("代碼已使用");
             }
 
-            // 3. Update or Create User Points
-            if (!userDoc.exists) {
-                transaction.set(userRef, {
-                    points: codeData.points,
-                    totalPointsEarned: codeData.points,
-                    level: 1,
-                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-                    uid: uid
+            // Read User Doc
+            const userDoc = await transaction.get("users", uid);
+
+            // Calculate new points
+            const pointsToAdd = Number(codeDoc.data.points || 0);
+            const currentPoints = userDoc.exists ? (userDoc.data.points || 0) : 0;
+            const currentTotal = userDoc.exists ? (userDoc.data.totalPointsEarned || 0) : 0;
+
+            // Update Code
+            transaction.update("codes", codeId, {
+                isUsed: true,
+                usedBy: uid,
+                usedAt: new Date()
+            });
+
+            // Update/Create User
+            if (userDoc.exists) {
+                transaction.update("users", uid, {
+                    points: currentPoints + pointsToAdd,
+                    totalPointsEarned: currentTotal + pointsToAdd,
+                    updatedAt: new Date()
                 });
             } else {
-                transaction.update(userRef, {
-                    points: admin.firestore.FieldValue.increment(codeData.points),
-                    totalPointsEarned: admin.firestore.FieldValue.increment(codeData.points),
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                transaction.set("users", uid, {
+                    email: "",
+                    points: pointsToAdd,
+                    totalPointsEarned: pointsToAdd,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
                 });
             }
 
-            // 4. Mark Code as Used
-            transaction.update(codeDocRef, {
-                isUsed: true,
-                usedAt: admin.firestore.FieldValue.serverTimestamp(),
-                usedBy: uid
-            });
-
-            // 5. Create Transaction Record
-            const txRef = adminDb.collection("transactions").doc(crypto.randomUUID());
-            transaction.set(txRef, {
-                uid,
-                amount: codeData.points,
+            // Create Transaction Record
+            const newTxId = crypto.randomUUID();
+            transaction.create("transactions", newTxId, {
+                uid: uid,
+                amount: pointsToAdd,
                 type: "QR_CODE",
-                codeId: codeId,
-                description: `兌換代碼: ${codeId}`,
-                createdAt: admin.firestore.FieldValue.serverTimestamp()
+                codeId: code,
+                description: "QR Code Redemption",
+                createdAt: new Date()
             });
-
-            return codeData.points;
         });
 
-        return NextResponse.json({ success: true, points: result });
+        return NextResponse.json({ success: true, points: 0 });
 
     } catch (error) {
         console.error("Claim Code Error:", error);
-        return NextResponse.json({ success: false, message: error.message }, { status: 400 });
+        const message = error.message || "伺服器錯誤";
+        return NextResponse.json({ error: message }, { status: message === "代碼已使用" ? 400 : 500 });
     }
 }

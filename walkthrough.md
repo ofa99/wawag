@@ -1,44 +1,41 @@
-# QR Code Scanning Fix Walkthrough
+# Cloudflare Deployment Fix Walkthrough
 
 ## Problem
-The user reported that:
-1.  Scanning QR codes (especially via image upload) would hang on "Processing..."
-2.  Points were not being transferred.
-3.  **New Request**: Wanted a success modal instead of a toast, and redirection to the dashboard.
-4.  **New Issue**: Points were 0 even after redemption (likely due to missing user document).
-5.  **New Request**: Specific error modal when a code has already been redeemed.
-6.  **Critical Issue**: API was failing silently or without effect because it used the Client SDK in a server environment without authentication, leading to permission denial.
-7.  **Admin Issue**: Manual point adjustment in the admin panel was not working.
+The deployment to Cloudflare Pages failed because `firebase-admin` (Node.js SDK) was used in API routes (`claim-code`, `admin/update-points`) which run on the **Edge Runtime**. Cloudflare Pages Functions do not support Node.js APIs.
+
+## Solution
+We migrated the problematic APIs to use the **Firebase REST API** directly, authenticated via a **Service Account** (using JWT signing). This allows us to maintain "Admin" privileges (bypassing security rules) while running fully compatible code in the Edge Runtime.
 
 ## Changes
 
-### Frontend (`app/(dashboard)/scan/page.jsx`)
--   **URL Parsing**: Added logic to detect if the scanned text is a URL.
--   **Safety Timeout**: Added a 10-second timeout to reset the `isProcessing` state.
--   **Success Modal**: Replaced the simple toast notification with a "Congratulations" modal showing the earned points.
--   **Error Modal**: Added a specific "Code Already Used" modal.
--   **Redirection**:
-    -   Success -> Redirects to `/dashboard`.
-    -   Error (Used Code) -> Reloads the page upon confirmation.
--   **Crash Fix**: Added missing `useRouter` import.
+### 1. New Helpers
+-   **`lib/serviceAccountAuth.js`**:
+    -   Uses `jose` library (installed via `npm install jose`) to sign a JWT using the Service Account Private Key.
+    -   Exchanges the JWT for a Google OAuth2 Access Token.
+    -   Caches the token for performance.
+-   **`lib/firestoreRest.js`**:
+    -   Updated to support **Transactions** (`beginTransaction`, `commit`, `rollback`).
+    -   Added a `runTransaction` helper that mimics the SDK's transaction behavior.
 
-### Backend (`app/api/claim-code/route.js`)
--   **Admin SDK Migration**: Rewrote the API to use `firebase-admin` (Admin SDK) instead of the Client SDK.
-    -   This allows the API to bypass Firestore security rules (which likely blocked the previous unauthenticated server-side writes).
-    -   Changed runtime from `edge` to `nodejs` (implicit by removing `export const runtime = 'edge'`) because Admin SDK requires Node.js.
--   **Transaction Logic**: Maintained the atomic transaction logic but updated syntax for Admin SDK (e.g., `admin.firestore.FieldValue.increment`).
--   **Transaction Logging**: Added a step to log the transaction in the `transactions` collection.
-
-### Admin Panel (`app/admin/points/page.jsx` & `app/api/admin/update-points/route.js`)
--   **Frontend Fix**: Implemented the missing `handleAdjustPoints` function which was being called by the buttons but didn't exist. Removed unused state variables.
--   **Backend Migration**: Migrated `update-points` API to use `firebase-admin` for reliable database writes, replacing the fragile REST API implementation.
+### 2. API Refactoring
+-   **`app/api/claim-code/route.js`**:
+    -   Removed `firebase-admin` dependency.
+    -   Uses `getAccessToken` to authenticate as admin.
+    -   Uses `runTransaction` (REST) to atomically claim code and update points.
+    -   Uses `runQuery` (REST) to find code by string.
+-   **`app/api/admin/update-points/route.js`**:
+    -   Removed `firebase-admin` dependency.
+    -   Uses `getAccessToken` to authenticate as admin.
+    -   Uses `updateDocument` (REST) to modify user points.
+-   **`app/api/transferPoints/route.js`**:
+    -   Refactored to use the same REST API + Service Account pattern to fix the "Permission Denied" issue identified earlier.
 
 ## Verification
--   **Permission Issue**: Solved by using Admin SDK (Service Account).
--   **UX Flow**: Validated frontend logic for success/error modals.
--   **Data Integrity**: Points are securely added, and double-spending is prevented.
--   **Admin Functionality**: Manual point adjustment now works correctly.
+-   **Deployment**: Should now succeed as no Node.js-only modules are used.
+-   **Functionality**:
+    -   `claim-code`: Tested logic (query -> transaction -> update).
+    -   `update-points`: Tested logic (read -> update).
+    -   `transferPoints`: Tested logic (query -> transaction -> update sender/receiver).
 
 ## Next Steps
--   Deploy changes.
--   Ask user to test again.
+-   Deploy and verify.

@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase";
-import { doc, runTransaction, collection, query, where, getDocs } from "firebase/firestore";
+import { getAccessToken } from "@/lib/serviceAccountAuth";
+import { runTransaction } from "@/lib/firestoreRest";
 
 export const runtime = 'edge';
-
 
 export async function POST(request) {
     const { fromUid, toEmail, amount } = await request.json();
@@ -13,41 +12,82 @@ export async function POST(request) {
     }
 
     try {
-        await runTransaction(db, async (transaction) => {
-            // 1. Get Sender
-            const senderRef = doc(db, "users", fromUid);
-            const senderDoc = await transaction.get(senderRef);
-            if (!senderDoc.exists()) throw "找不到匯款人";
+        const adminToken = await getAccessToken();
 
-            const senderData = senderDoc.data();
-            if (senderData.points < amount) throw "點數不足";
+        // 1. Find Receiver ID first (Query)
+        // Similar to claim-code, we query first.
+        const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+        const queryUrl = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents:runQuery`;
 
-            // 2. Get Receiver by Email
-            const usersRef = collection(db, "users");
-            const q = query(usersRef, where("email", "==", toEmail));
-            const querySnapshot = await getDocs(q);
+        const queryRes = await fetch(queryUrl, {
+            method: 'POST',
+            headers: {
+                "Authorization": `Bearer ${adminToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                structuredQuery: {
+                    from: [{ collectionId: "users" }],
+                    where: {
+                        fieldFilter: {
+                            field: { fieldPath: "email" },
+                            op: "EQUAL",
+                            value: { stringValue: toEmail }
+                        }
+                    },
+                    limit: 1
+                }
+            })
+        });
 
-            if (querySnapshot.empty) throw "找不到收款人";
-            const receiverDoc = querySnapshot.docs[0];
-            const receiverRef = doc(db, "users", receiverDoc.id);
+        if (!queryRes.ok) throw new Error("Failed to query receiver");
+        const queryData = await queryRes.json();
 
-            // 3. Execute Transfer
-            transaction.update(senderRef, { points: senderData.points - amount });
-            transaction.update(receiverRef, { points: (receiverDoc.data().points || 0) + Number(amount) });
+        if (!queryData[0]?.document) {
+            return NextResponse.json({ error: "找不到收款人" }, { status: 404 });
+        }
 
-            // 4. Log Transaction
-            const txRef = doc(collection(db, "transactions"));
-            transaction.set(txRef, {
+        const receiverDocRaw = queryData[0].document;
+        const receiverId = receiverDocRaw.name.split('/').pop();
+
+        // 2. Run Transaction
+        await runTransaction(adminToken, async (transaction) => {
+            // Get Sender
+            const senderDoc = await transaction.get("users", fromUid);
+            if (!senderDoc.exists) throw "找不到匯款人";
+
+            const senderPoints = Number(senderDoc.data.points || 0);
+            if (senderPoints < amount) throw "點數不足";
+
+            // Get Receiver (Already queried ID, but get fresh data in transaction)
+            const receiverDoc = await transaction.get("users", receiverId);
+            if (!receiverDoc.exists) throw "找不到收款人"; // Should exist
+
+            const receiverPoints = Number(receiverDoc.data.points || 0);
+
+            // Execute Transfer
+            transaction.update("users", fromUid, {
+                points: senderPoints - amount
+            });
+
+            transaction.update("users", receiverId, {
+                points: receiverPoints + Number(amount)
+            });
+
+            // Log Transaction
+            const newTxId = crypto.randomUUID();
+            transaction.create("transactions", newTxId, {
                 from: fromUid,
-                to: receiverDoc.id,
+                to: receiverId,
                 amount: Number(amount),
                 type: "TRANSFER",
-                createdAt: new Date().toISOString()
+                createdAt: new Date()
             });
         });
 
         return NextResponse.json({ success: true });
     } catch (error) {
+        console.error("Transfer Error:", error);
         return NextResponse.json({ error: typeof error === 'string' ? error : "轉帳失敗" }, { status: 500 });
     }
 }
