@@ -91,13 +91,13 @@ export default function ScanPage() {
                     scannerInstance.clear();
                 }
             } else {
-                if (data.message === "代碼已使用") {
+                if (data.message === "代碼已使用" || data.error === "代碼已使用") {
                     setShowErrorModal(true);
                     if (scannerInstance) {
                         scannerInstance.clear(); // Clear scanner to stop scanning while modal is open
                     }
                 } else {
-                    toast.error(data.message || "無效的代碼 😢");
+                    toast.error(data.error || data.message || "無效的代碼 😢");
                     if (scannerInstance) {
                         scannerInstance.resume();
                     }
