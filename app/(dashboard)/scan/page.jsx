@@ -11,6 +11,7 @@ export default function ScanPage() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [manualCode, setManualCode] = useState("");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [showErrorModal, setShowErrorModal] = useState(false);
     const [earnedPoints, setEarnedPoints] = useState(0);
     const router = useRouter();
 
@@ -89,9 +90,16 @@ export default function ScanPage() {
                     scannerInstance.clear();
                 }
             } else {
-                toast.error(data.message || "無效的代碼 😢");
-                if (scannerInstance) {
-                    scannerInstance.resume();
+                if (data.message === "代碼已使用") {
+                    setShowErrorModal(true);
+                    if (scannerInstance) {
+                        scannerInstance.clear(); // Clear scanner to stop scanning while modal is open
+                    }
+                } else {
+                    toast.error(data.message || "無效的代碼 😢");
+                    if (scannerInstance) {
+                        scannerInstance.resume();
+                    }
                 }
             }
         } catch (error) {
@@ -113,6 +121,13 @@ export default function ScanPage() {
 
     const handleConfirmSuccess = () => {
         router.push("/dashboard");
+    };
+
+    const handleCloseError = () => {
+        setShowErrorModal(false);
+        setManualCode("");
+        // Reload the page to reset scanner cleanly or just let them use manual input
+        window.location.reload();
     };
 
     return (
@@ -165,6 +180,24 @@ export default function ScanPage() {
                         <button
                             onClick={handleConfirmSuccess}
                             className="w-full bg-gradient-to-r from-wawag-blue to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform transition hover:scale-105 active:scale-95"
+                        >
+                            確認
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Error Modal (Used Code) */}
+            {showErrorModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full text-center transform transition-all scale-100">
+                        <div className="text-6xl mb-4">⚠️</div>
+                        <h2 className="text-xl font-black text-gray-800 mb-4">此獎已經被兌換過</h2>
+                        <p className="text-gray-600 font-bold mb-6">請更換別組號碼</p>
+
+                        <button
+                            onClick={handleCloseError}
+                            className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-xl shadow-lg transform transition hover:scale-105 active:scale-95"
                         >
                             確認
                         </button>
