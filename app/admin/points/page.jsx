@@ -12,10 +12,6 @@ export default function AdminPointsPage() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
-    // Assuming these new states are intended to be added for the new handleUpdatePoints logic
-    const [selectedUser, setSelectedUser] = useState(null);
-    const [pointsAmount, setPointsAmount] = useState("");
-    const [showModal, setShowModal] = useState(false);
 
 
     useEffect(() => {
@@ -47,26 +43,16 @@ export default function AdminPointsPage() {
         }
     }, [user]);
 
-    const handleUpdatePoints = async (e) => {
-        e.preventDefault();
-        if (!selectedUser) return;
-
-        const amount = parseInt(pointsAmount);
-        if (isNaN(amount) || amount === 0) {
-            toast.error("請輸入有效的點數");
-            return;
-        }
-
+    const handleAdjustPoints = async (userId, amount) => {
         // Optimistic Update
         const oldUsers = [...users];
         setUsers(users.map(u => {
-            if (u.uid === selectedUser.uid) {
+            if (u.uid === userId) {
                 return { ...u, points: (u.points || 0) + amount };
             }
             return u;
         }));
 
-        setShowModal(false);
         toast.loading("更新點數中...", { id: "update-points" });
 
         try {
@@ -78,7 +64,7 @@ export default function AdminPointsPage() {
                     "Authorization": `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    userId: selectedUser.uid,
+                    userId: userId,
                     amount: amount
                 })
             });
