@@ -49,6 +49,8 @@ export async function POST(request) {
         const codeDocRaw = queryData[0].document;
         const codeId = codeDocRaw.name.split('/').pop();
 
+        let pointsToAdd = 0;
+
         // 2. Run Transaction
         await runTransaction(adminToken, async (transaction) => {
             // Read Code Doc
@@ -63,7 +65,7 @@ export async function POST(request) {
             const userDoc = await transaction.get("users", uid);
 
             // Calculate new points
-            const pointsToAdd = Number(codeDoc.data.points || 0);
+            pointsToAdd = Number(codeDoc.data.points || 0);
             const currentPoints = userDoc.exists ? (userDoc.data.points || 0) : 0;
             const currentTotal = userDoc.exists ? (userDoc.data.totalPointsEarned || 0) : 0;
 
@@ -103,7 +105,7 @@ export async function POST(request) {
             });
         });
 
-        return NextResponse.json({ success: true, points: 0 });
+        return NextResponse.json({ success: true, points: pointsToAdd });
 
     } catch (error) {
         console.error("Claim Code Error:", error);
