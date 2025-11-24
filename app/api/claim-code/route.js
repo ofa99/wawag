@@ -14,18 +14,27 @@ export async function POST(request) {
             return NextResponse.json({ success: false, message: "缺少代碼 ID 或使用者 ID" }, { status: 400 });
         }
 
+        // 1. Find the code document (Query first to get ID)
+        const codesRef = collection(db, "codes");
+        const q = query(codesRef, where("codeId", "==", codeId));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            return NextResponse.json({ success: false, message: "無效的代碼" }, { status: 400 });
+        }
+
+        const codeDocSnapshot = querySnapshot.docs[0];
+        const codeDocId = codeDocSnapshot.id;
+
         // Use Transaction for atomicity
         const result = await runTransaction(db, async (transaction) => {
-            // 1. Find the code document
-            const codesRef = collection(db, "codes");
-            const q = query(codesRef, where("codeId", "==", codeId));
-            const querySnapshot = await getDocs(q);
+            const codeDocRef = doc(db, "codes", codeDocId);
+            const codeDoc = await transaction.get(codeDocRef);
 
-            if (querySnapshot.empty) {
+            if (!codeDoc.exists()) {
                 throw new Error("無效的代碼");
             }
 
-            const codeDoc = querySnapshot.docs[0];
             const codeData = codeDoc.data();
 
             // 2. Check if used
@@ -42,11 +51,10 @@ export async function POST(request) {
             });
 
             // 4. Mark Code as Used
-            const codeDocRef = doc(db, "codes", codeDoc.id);
             transaction.update(codeDocRef, {
                 isUsed: true,
                 usedAt: serverTimestamp(),
-                usedBy: uid // Optional: Track who used it
+                usedBy: uid
             });
 
             return codeData.points;
