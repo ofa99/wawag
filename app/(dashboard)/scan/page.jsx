@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { toast } from "react-hot-toast";
 import { doc, runTransaction, collection, addDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
 
 export default function ScanPage() {
     const [scanResult, setScanResult] = useState(null);
