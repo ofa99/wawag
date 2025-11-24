@@ -29,7 +29,7 @@ export async function POST(request) {
                     from: [{ collectionId: "codes" }],
                     where: {
                         fieldFilter: {
-                            field: { fieldPath: "code" },
+                            field: { fieldPath: "codeId" },
                             op: "EQUAL",
                             value: { stringValue: code }
                         }

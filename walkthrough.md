@@ -23,6 +23,7 @@ We migrated the problematic APIs to use the **Firebase REST API** directly, auth
     -   Uses `getAccessToken` to authenticate as admin.
     -   Uses `runTransaction` (REST) to atomically claim code and update points.
     -   Uses `runQuery` (REST) to find code by string.
+    -   **Fix**: Corrected query field from `code` to `codeId` to match Firestore schema.
 -   **`app/api/admin/update-points/route.js`**:
     -   Removed `firebase-admin` dependency.
     -   Uses `getAccessToken` to authenticate as admin.
@@ -33,7 +34,7 @@ We migrated the problematic APIs to use the **Firebase REST API** directly, auth
 ## Verification
 -   **Deployment**: Should now succeed as no Node.js-only modules are used.
 -   **Functionality**:
-    -   `claim-code`: Tested logic (query -> transaction -> update).
+    -   `claim-code`: Tested logic (query -> transaction -> update). Verified field names via inspection script.
     -   `update-points`: Tested logic (read -> update).
     -   `transferPoints`: Tested logic (query -> transaction -> update sender/receiver).
 
