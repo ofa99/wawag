@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, updateDoc, doc, increment, serverTimestamp, runTransaction } from "firebase/firestore";
+import { adminDb, admin } from "@/lib/firebase-admin";
 
-export const runtime = 'edge';
-
+// Admin SDK requires Node.js runtime, not Edge
+// export const runtime = 'edge'; 
 
 export async function POST(request) {
     try {
@@ -14,29 +13,30 @@ export async function POST(request) {
             return NextResponse.json({ success: false, message: "缺少代碼 ID 或使用者 ID" }, { status: 400 });
         }
 
-        // 1. Find the code document (Query first to get ID)
-        const codesRef = collection(db, "codes");
-        const q = query(codesRef, where("codeId", "==", codeId));
-        const querySnapshot = await getDocs(q);
+        if (!adminDb) {
+            return NextResponse.json({ success: false, message: "Server Error: Admin SDK not initialized" }, { status: 500 });
+        }
 
-        if (querySnapshot.empty) {
+        // 1. Find the code document (Query first to get ID)
+        const codesRef = adminDb.collection("codes");
+        const snapshot = await codesRef.where("codeId", "==", codeId).get();
+
+        if (snapshot.empty) {
             return NextResponse.json({ success: false, message: "無效的代碼" }, { status: 400 });
         }
 
-        const codeDocSnapshot = querySnapshot.docs[0];
+        const codeDocSnapshot = snapshot.docs[0];
         const codeDocId = codeDocSnapshot.id;
 
         // Use Transaction for atomicity
-        const result = await runTransaction(db, async (transaction) => {
-            const codeDocRef = doc(db, "codes", codeDocId);
-            const userRef = doc(db, "users", uid);
+        const result = await adminDb.runTransaction(async (transaction) => {
+            const codeDocRef = adminDb.collection("codes").doc(codeDocId);
+            const userRef = adminDb.collection("users").doc(uid);
 
-            const [codeDoc, userDoc] = await Promise.all([
-                transaction.get(codeDocRef),
-                transaction.get(userRef)
-            ]);
+            const codeDoc = await transaction.get(codeDocRef);
+            const userDoc = await transaction.get(userRef);
 
-            if (!codeDoc.exists()) {
+            if (!codeDoc.exists) {
                 throw new Error("無效的代碼");
             }
 
@@ -48,39 +48,39 @@ export async function POST(request) {
             }
 
             // 3. Update or Create User Points
-            if (!userDoc.exists()) {
+            if (!userDoc.exists) {
                 transaction.set(userRef, {
                     points: codeData.points,
                     totalPointsEarned: codeData.points,
                     level: 1,
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp(),
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                     uid: uid
                 });
             } else {
                 transaction.update(userRef, {
-                    points: increment(codeData.points),
-                    totalPointsEarned: increment(codeData.points),
-                    updatedAt: serverTimestamp()
+                    points: admin.firestore.FieldValue.increment(codeData.points),
+                    totalPointsEarned: admin.firestore.FieldValue.increment(codeData.points),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
                 });
             }
 
             // 4. Mark Code as Used
             transaction.update(codeDocRef, {
                 isUsed: true,
-                usedAt: serverTimestamp(),
+                usedAt: admin.firestore.FieldValue.serverTimestamp(),
                 usedBy: uid
             });
 
             // 5. Create Transaction Record
-            const txRef = doc(db, "transactions", crypto.randomUUID());
+            const txRef = adminDb.collection("transactions").doc(crypto.randomUUID());
             transaction.set(txRef, {
                 uid,
                 amount: codeData.points,
                 type: "QR_CODE",
                 codeId: codeId,
                 description: `兌換代碼: ${codeId}`,
-                createdAt: serverTimestamp()
+                createdAt: admin.firestore.FieldValue.serverTimestamp()
             });
 
             return codeData.points;
