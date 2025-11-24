@@ -6,9 +6,9 @@ export const runtime = 'edge';
 
 export async function POST(request) {
     try {
-        const { code, uid } = await request.json();
+        const { codeId: requestedCode, uid } = await request.json();
 
-        if (!code || !uid) {
+        if (!requestedCode || !uid) {
             return NextResponse.json({ error: "無效的請求" }, { status: 400 });
         }
 
@@ -31,7 +31,7 @@ export async function POST(request) {
                         fieldFilter: {
                             field: { fieldPath: "codeId" },
                             op: "EQUAL",
-                            value: { stringValue: code }
+                            value: { stringValue: requestedCode }
                         }
                     },
                     limit: 1
@@ -97,7 +97,7 @@ export async function POST(request) {
                 uid: uid,
                 amount: pointsToAdd,
                 type: "QR_CODE",
-                codeId: code,
+                codeId: requestedCode,
                 description: "QR Code Redemption",
                 createdAt: new Date()
             });
