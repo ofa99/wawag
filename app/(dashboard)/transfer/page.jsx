@@ -18,8 +18,13 @@ export default function TransferPage() {
         setLoading(true);
 
         try {
+            const token = await user.getIdToken();
             const res = await fetch("/api/transferPoints", {
                 method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
                 body: JSON.stringify({ fromUid: user.uid, toEmail: email, amount: Number(amount) }),
             });
 
