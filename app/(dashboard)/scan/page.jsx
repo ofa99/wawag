@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { toast } from "react-hot-toast";
 import { doc, runTransaction, collection, addDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function ScanPage() {
     const [scanResult, setScanResult] = useState(null);
@@ -15,6 +15,15 @@ export default function ScanPage() {
     const [showErrorModal, setShowErrorModal] = useState(false);
     const [earnedPoints, setEarnedPoints] = useState(0);
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // Auto-claim if code is in URL
+    useEffect(() => {
+        const codeFromUrl = searchParams.get("code");
+        if (codeFromUrl && !isProcessing && !showSuccessModal && !showErrorModal) {
+            handleClaim(codeFromUrl);
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         const scanner = new Html5QrcodeScanner(

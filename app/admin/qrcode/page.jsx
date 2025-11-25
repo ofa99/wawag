@@ -128,7 +128,7 @@ export default function AdminQRCodePage() {
                         >
                             <div className="bg-white p-2 rounded-xl shadow-sm mb-3">
                                 <img
-                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${generatedCode.codeId}`}
+                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://wawag.pages.dev/scan?code=${generatedCode.codeId}`)}`}
                                     alt="QR Code"
                                     className="w-32 h-32"
                                 />
