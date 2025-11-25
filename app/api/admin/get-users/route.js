@@ -40,14 +40,16 @@ export async function GET(request) {
             // If data.totalPointsEarned is preferred for points calculation,
             // it should be calculated before spreading `data` or explicitly set after.
             // For now, we'll follow the provided snippet's logic for points and level.
-            const points = data.totalPointsEarned || data.points || 0;
+            const currentBalance = data.points !== undefined ? data.points : 0;
+            // For level calculation, use totalPointsEarned, fallback to currentBalance if missing (e.g. legacy data)
+            const totalEarned = data.totalPointsEarned !== undefined ? data.totalPointsEarned : currentBalance;
 
             return {
                 uid: data.id, // Assuming data.id is the correct UID, as 'doc' is not defined.
                 ...data, // Spreads all properties from the Firestore document
                 // Ensure numeric values, potentially overriding values from `...data` if they are falsy
-                points: points, // Use the calculated points
-                level: getLevel(points), // Use the calculated level
+                points: currentBalance, // Use the actual current balance
+                level: getLevel(totalEarned), // Calculate level based on total earned
                 isAdmin: data.isAdmin || false, // Include isAdmin field
                 // Format dates if they exist
                 createdAt: data.createdAt ? new Date(data.createdAt).toISOString() : null,
