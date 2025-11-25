@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { verifyIdToken, getDocument, updateDocument, createDocument, runTransaction } from "@/lib/firestoreRest";
+import { verifyIdToken, getDocument, updateDocument, createDocument, runTransaction, getAccessToken } from "@/lib/firestoreRest";
 
 export const runtime = 'edge';
 
@@ -23,8 +23,11 @@ export async function POST(request) {
             return NextResponse.json({ error: "無效的 Gift ID" }, { status: 400 });
         }
 
+        // Get Admin Access Token for transaction (to allow updating gifts/inventory)
+        const accessToken = await getAccessToken();
+
         // Use Transaction for atomic update
-        await runTransaction(token, async (transaction) => {
+        await runTransaction(accessToken, async (transaction) => {
             // 1. Get Gift
             const giftDoc = await transaction.get("gifts", giftId);
             if (!giftDoc.exists) throw new Error("禮物不存在");
