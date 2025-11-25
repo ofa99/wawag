@@ -1,14 +1,26 @@
 import { NextResponse } from "next/server";
 import { getAccessToken } from "@/lib/serviceAccountAuth";
-import { runTransaction, getCollection } from "@/lib/firestoreRest";
+import { runTransaction, verifyIdToken } from "@/lib/firestoreRest";
 
 export const runtime = 'edge';
 
 export async function POST(request) {
     try {
-        const { codeId: requestedCode, uid } = await request.json();
+        // 1. Verify User Token
+        const authHeader = request.headers.get("Authorization");
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return NextResponse.json({ error: "未經授權" }, { status: 401 });
+        }
+        const token = authHeader.split("Bearer ")[1];
+        const userInfo = await verifyIdToken(token);
+        if (!userInfo || !userInfo.uid) {
+            return NextResponse.json({ error: "無效的 Token" }, { status: 403 });
+        }
 
-        if (!requestedCode || !uid) {
+        const uid = userInfo.uid; // Enforce claimer identity
+        const { code: requestedCode } = await request.json();
+
+        if (!uid || !requestedCode) {
             return NextResponse.json({ error: "無效的請求" }, { status: 400 });
         }
 

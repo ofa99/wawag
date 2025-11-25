@@ -1,17 +1,28 @@
 import { NextResponse } from "next/server";
 import { getAccessToken } from "@/lib/serviceAccountAuth";
-import { runTransaction } from "@/lib/firestoreRest";
+import { runTransaction, verifyIdToken } from "@/lib/firestoreRest";
 
 export const runtime = 'edge';
 
 export async function POST(request) {
-    const { fromUid, toEmail, amount } = await request.json();
-
-    if (!fromUid || !toEmail || !amount || amount < 10) {
-        return NextResponse.json({ error: "無效的請求" }, { status: 400 });
-    }
-
     try {
+        // 1. Verify User Token
+        const authHeader = request.headers.get("Authorization");
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return NextResponse.json({ error: "未經授權" }, { status: 401 });
+        }
+        const token = authHeader.split("Bearer ")[1];
+        const userInfo = await verifyIdToken(token);
+        if (!userInfo || !userInfo.uid) {
+            return NextResponse.json({ error: "無效的 Token" }, { status: 403 });
+        }
+
+        const fromUid = userInfo.uid; // Enforce sender identity
+        const { toEmail, amount } = await request.json();
+
+        if (!toEmail || !amount || amount < 10) {
+            return NextResponse.json({ error: "無效的請求" }, { status: 400 });
+        }
         const adminToken = await getAccessToken();
 
         // 1. Find Receiver ID first (Query)
