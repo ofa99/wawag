@@ -31,11 +31,26 @@ export default function LoginPage() {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            await signInWithEmailAndPassword(auth, email, password);
+            let loginEmail = email;
+
+            // Check if input looks like a Taiwan phone number (09xxxxxxxx)
+            const phoneRegex = /^09\d{8}$/;
+            if (phoneRegex.test(email)) {
+                loginEmail = `${email}@phone.wawag.local`;
+            }
+
+            await signInWithEmailAndPassword(auth, loginEmail, password);
             toast.success("歡迎回來！🌸");
             router.push(getRedirectPath());
         } catch (error) {
-            toast.error("登入失敗: " + error.message);
+            console.error(error);
+            let message = "登入失敗";
+            if (error.code === 'auth/invalid-email') message = "帳號格式錯誤";
+            if (error.code === 'auth/user-not-found') message = "帳號不存在";
+            if (error.code === 'auth/wrong-password') message = "密碼錯誤";
+            if (error.code === 'auth/invalid-credential') message = "帳號或密碼錯誤";
+
+            toast.error(message);
         }
     };
 
@@ -89,10 +104,10 @@ export default function LoginPage() {
 
                     <form onSubmit={handleLogin} className="space-y-5">
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-wawag-pink ml-2 uppercase tracking-wider">電子郵件</label>
+                            <label className="text-xs font-bold text-wawag-pink ml-2 uppercase tracking-wider">手機號碼 / 電子郵件</label>
                             <input
-                                type="email"
-                                placeholder="bunny@wawag.com"
+                                type="text"
+                                placeholder="輸入手機號碼或 Email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full px-5 py-4 rounded-2xl bg-wawag-cream border-2 border-transparent focus:border-wawag-pink focus:bg-white outline-none transition-all font-medium text-gray-600 placeholder-gray-300"

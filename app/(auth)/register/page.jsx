@@ -19,8 +19,18 @@ export default function RegisterPage() {
     const handleRegister = async (e) => {
         e.preventDefault();
         try {
+            let registerEmail = email;
+            let phoneNumber = null;
+
+            // Check if input looks like a Taiwan phone number (09xxxxxxxx)
+            const phoneRegex = /^09\d{8}$/;
+            if (phoneRegex.test(email)) {
+                registerEmail = `${email}@phone.wawag.local`;
+                phoneNumber = email;
+            }
+
             // 1. Create Auth User
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const userCredential = await createUserWithEmailAndPassword(auth, registerEmail, password);
             const user = userCredential.user;
 
             // 2. Update Profile
@@ -30,7 +40,8 @@ export default function RegisterPage() {
             await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
                 displayName: name,
-                email: email,
+                email: registerEmail,
+                phone: phoneNumber, // Store phone if registered with phone
                 points: 0,
                 createdAt: new Date().toISOString(),
                 avatar: `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${user.uid}`
@@ -39,7 +50,13 @@ export default function RegisterPage() {
             toast.success("帳戶建立成功！🎉");
             router.push("/dashboard");
         } catch (error) {
-            toast.error("註冊失敗: " + error.message);
+            console.error(error);
+            let message = "註冊失敗";
+            if (error.code === 'auth/email-already-in-use') message = "此帳號（手機/Email）已註冊";
+            if (error.code === 'auth/invalid-email') message = "帳號格式錯誤";
+            if (error.code === 'auth/weak-password') message = "密碼強度不足";
+
+            toast.error(message);
         }
     };
 
@@ -93,10 +110,10 @@ export default function RegisterPage() {
                             />
                         </div>
                         <div className="space-y-1">
-                            <label className="text-xs font-bold text-wawag-blue ml-2 uppercase tracking-wider">電子郵件</label>
+                            <label className="text-xs font-bold text-wawag-blue ml-2 uppercase tracking-wider">手機號碼 / 電子郵件</label>
                             <input
-                                type="email"
-                                placeholder="bear@wawag.com"
+                                type="text"
+                                placeholder="輸入手機號碼或 Email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full px-5 py-4 rounded-2xl bg-wawag-cream border-2 border-transparent focus:border-wawag-blue focus:bg-white outline-none transition-all font-medium text-gray-600 placeholder-gray-300"
