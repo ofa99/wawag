@@ -3,7 +3,7 @@ import { useState } from "react";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -11,10 +11,12 @@ import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
 
 export default function RegisterPage() {
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState(searchParams.get("email") || "");
+    const [password, setPassword] = useState("");
 
     const handleRegister = async (e) => {
         e.preventDefault();

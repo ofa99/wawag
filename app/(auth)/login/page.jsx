@@ -44,10 +44,23 @@ export default function LoginPage() {
             router.push(getRedirectPath());
         } catch (error) {
             console.error(error);
+
+            if (error.code === 'auth/user-not-found') {
+                toast.error("尚未註冊，即將轉跳至註冊頁面...");
+                // Redirect to register page with the email/phone pre-filled
+                setTimeout(() => {
+                    router.push(`/register?email=${encodeURIComponent(email)}`);
+                }, 1500);
+                return;
+            }
+
+            if (error.code === 'auth/wrong-password') {
+                toast.error("密碼錯誤，請洽管理員");
+                return;
+            }
+
             let message = "登入失敗";
             if (error.code === 'auth/invalid-email') message = "帳號格式錯誤";
-            if (error.code === 'auth/user-not-found') message = "帳號不存在";
-            if (error.code === 'auth/wrong-password') message = "密碼錯誤";
             if (error.code === 'auth/invalid-credential') message = "帳號或密碼錯誤";
 
             toast.error(message);
