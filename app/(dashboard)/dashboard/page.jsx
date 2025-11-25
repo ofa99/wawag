@@ -483,6 +483,27 @@ export default function DashboardPage() {
                             </div>
                         </motion.div>
                     </Link>
+
+                    {/* Gift Redemption Button */}
+                    <Link href="/gifts" className="col-span-2">
+                        <motion.div
+                            whileHover={{ scale: 1.05, y: -4 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="relative"
+                        >
+                            <div className="bg-gradient-to-b from-pink-400 to-pink-600 rounded-3xl p-6 border-6 border-pink-700 shadow-xl relative overflow-hidden flex items-center justify-center gap-4">
+                                {/* Button frame decoration */}
+                                <div className="absolute top-2 left-2 right-2 h-3 bg-pink-300/50 rounded-full" />
+                                <div className="absolute bottom-2 left-2 right-2 h-3 bg-pink-800/50 rounded-full" />
+
+                                <div className="text-5xl relative z-10">🎁</div>
+                                <div className="text-center relative z-10">
+                                    <div className="font-black text-white text-2xl drop-shadow-lg tracking-wider">禮物兌換</div>
+                                    <div className="text-white/80 text-sm font-bold">用點數換好禮</div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </Link>
                 </motion.div>
 
                 {/* Bottom Navigation Icons */}
