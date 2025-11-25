@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { verifyIdToken, getDocument, updateDocument, createDocument, runTransaction, getAccessToken } from "@/lib/firestoreRest";
+import { verifyIdToken, getDocument, updateDocument, createDocument, runTransaction } from "@/lib/firestoreRest";
+import { getAccessToken } from "@/lib/serviceAccountAuth";
 
 export const runtime = 'edge';
 
