@@ -47,7 +47,7 @@ export async function POST(request) {
             const currentPoints = Number(userDoc.data.points || 0);
 
             if (currentPoints < cost) {
-                throw new Error("點數不足");
+                throw new Error(`點數不足 (目前: ${currentPoints}, 需要: ${cost}, UID: ${userInfo.uid})`);
             }
 
             // 3. Update User Points
