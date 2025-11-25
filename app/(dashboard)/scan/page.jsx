@@ -64,17 +64,33 @@ export default function ScanPage() {
 
         try {
             // Extract code from URL if present
+            // Extract code from URL if present
             let cleanCode = code;
             try {
-                const url = new URL(code);
-                const pathParts = url.pathname.split('/').filter(p => p);
-                if (pathParts.length > 0) {
-                    cleanCode = pathParts[pathParts.length - 1];
-                } else if (url.searchParams.has('code')) {
-                    cleanCode = url.searchParams.get('code');
+                if (code.includes("http") || code.includes("wawag.pages.dev")) {
+                    const urlObj = new URL(code);
+                    const codeParam = urlObj.searchParams.get("code");
+                    if (codeParam) {
+                        cleanCode = codeParam;
+                    } else {
+                        // Handle case where code might be part of path
+                        const pathParts = urlObj.pathname.split('/').filter(p => p);
+                        if (pathParts.length > 0) {
+                            // Assume last part is code if not 'scan'
+                            const lastPart = pathParts[pathParts.length - 1];
+                            if (lastPart !== 'scan') {
+                                cleanCode = lastPart;
+                            }
+                        }
+                    }
                 }
             } catch (e) {
-                cleanCode = code;
+                // Fallback for partial URLs or malformed strings
+                console.warn("URL parsing failed, trying regex", e);
+                const match = code.match(/[?&]code=([^&]+)/);
+                if (match) {
+                    cleanCode = match[1];
+                }
             }
 
             console.log("Scanned code:", code, "Cleaned code:", cleanCode);

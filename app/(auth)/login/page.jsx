@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -14,20 +14,26 @@ export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { user } = useAuth();
+
+    const getRedirectPath = () => {
+        const returnUrl = searchParams.get("returnUrl");
+        return returnUrl || "/dashboard";
+    };
 
     useEffect(() => {
         if (user) {
-            router.push("/dashboard");
+            router.push(getRedirectPath());
         }
-    }, [user, router]);
+    }, [user, router, searchParams]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
             await signInWithEmailAndPassword(auth, email, password);
             toast.success("歡迎回來！🌸");
-            router.push("/dashboard");
+            router.push(getRedirectPath());
         } catch (error) {
             toast.error("登入失敗: " + error.message);
         }
@@ -38,7 +44,7 @@ export default function LoginPage() {
         try {
             await signInWithPopup(auth, provider);
             toast.success("歡迎！✨");
-            router.push("/dashboard");
+            router.push(getRedirectPath());
         } catch (error) {
             toast.error("Google 登入失敗");
         }
