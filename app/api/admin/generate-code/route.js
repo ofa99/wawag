@@ -28,30 +28,40 @@ export async function POST(request) {
 
         // 2. Parse Body
         const body = await request.json();
-        const { points } = body;
+        const { points, count = 1 } = body;
 
         if (!points || typeof points !== 'number' || points <= 0) {
             return NextResponse.json({ error: "無效的點數數值" }, { status: 400 });
         }
 
-        // 3. Generate Unique Code
-        const codeId = `WAWAG-${globalThis.crypto.randomUUID().split('-')[0].toUpperCase()}`;
+        if (count > 99) {
+            return NextResponse.json({ error: "一次最多產生 99 組" }, { status: 400 });
+        }
 
-        // 4. Save to Firestore via REST API
-        await createDocument("codes", {
-            codeId,
-            points,
-            isUsed: false,
-            createdAt: new Date(),
-            usedAt: null
-        }, token);
+        const generateOne = async () => {
+            const codeId = `WAWAG-${globalThis.crypto.randomUUID().split('-')[0].toUpperCase()}`;
+            const docData = {
+                codeId,
+                points,
+                isUsed: false,
+                createdAt: new Date(),
+                usedAt: null
+            };
+            await createDocument("codes", docData, token);
+            return { codeId, points };
+        };
 
-        // 5. Return Response
-        return NextResponse.json({
-            success: true,
-            codeId,
-            points
-        });
+        if (count > 1) {
+            const promises = Array(count).fill(0).map(() => generateOne());
+            const codes = await Promise.all(promises);
+            return NextResponse.json({ success: true, codes });
+        } else {
+            const result = await generateOne();
+            return NextResponse.json({
+                success: true,
+                ...result
+            });
+        }
 
     } catch (error) {
         console.error("Generate Code Error:", error);

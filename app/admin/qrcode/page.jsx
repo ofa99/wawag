@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
@@ -12,9 +12,14 @@ import { db } from "@/lib/firebase";
 export default function AdminQRCodePage() {
     const { user } = useAuth();
     const [points, setPoints] = useState(100);
+    const [count, setCount] = useState(1);
     const [loading, setLoading] = useState(false);
-    const [generatedCode, setGeneratedCode] = useState(null);
+    const [progress, setProgress] = useState("");
+    const [generatedCode, setGeneratedCode] = useState(null); // For single display
     const [history, setHistory] = useState([]);
+
+    // Refs for batch processing
+    const templateRef = useRef(null);
 
     // Real-time History Subscription
     useEffect(() => {
@@ -23,7 +28,6 @@ export default function AdminQRCodePage() {
             const codes = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data(),
-                // Handle Timestamp objects
                 createdAt: doc.data().createdAt?.toDate().toISOString() || new Date().toISOString(),
                 usedAt: doc.data().usedAt?.toDate().toISOString() || null
             }));
@@ -37,6 +41,7 @@ export default function AdminQRCodePage() {
         e.preventDefault();
         setLoading(true);
         setGeneratedCode(null);
+        setProgress("正在產生代碼...");
 
         try {
             const token = await user.getIdToken();
@@ -46,15 +51,25 @@ export default function AdminQRCodePage() {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify({ points: Number(points) }),
+                body: JSON.stringify({
+                    points: Number(points),
+                    count: Number(count)
+                }),
             });
 
             const data = await res.json();
 
             if (res.ok) {
-                toast.success(`成功產生代碼！\n${data.codeId}`);
-                setPoints("");
-                setGeneratedCode(data);
+                if (data.codes) {
+                    // Batch Mode
+                    await processBatchDownload(data.codes);
+                } else {
+                    // Single Mode
+                    toast.success(`成功產生代碼！\n${data.codeId}`);
+                    setGeneratedCode(data);
+                }
+                setPoints(100);
+                setCount(1);
             } else {
                 console.error("Generate failed:", data);
                 toast.error(`產生失敗: ${data.error || "未知錯誤"}`);
@@ -64,7 +79,68 @@ export default function AdminQRCodePage() {
             toast.error(`發生錯誤: ${error.message}`);
         } finally {
             setLoading(false);
+            setProgress("");
         }
+    };
+
+    const processBatchDownload = async (codes) => {
+        const JSZip = (await import("jszip")).default;
+        const html2canvas = (await import("html2canvas")).default;
+        const { saveAs } = (await import("file-saver")).default;
+
+        const zip = new JSZip();
+        const folder = zip.folder("qrcodes");
+
+        setProgress(`正在打包圖片 (0/${codes.length})...`);
+
+        // We need to render each code into the template and capture it
+        // Since React state update is async, we can't just loop state.
+        // We will manually manipulate the DOM of the templateRef for speed and simplicity in this loop
+
+        const template = templateRef.current;
+        if (!template) return;
+
+        // Show template temporarily (it might be hidden)
+        template.style.display = "block";
+
+        for (let i = 0; i < codes.length; i++) {
+            const code = codes[i];
+
+            // Update Template Content Manually
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://wawag.pages.dev/scan?code=${code.codeId}`)}`;
+
+            // Wait for QR image to load
+            await new Promise((resolve) => {
+                const img = template.querySelector("#qr-img");
+                const pointsText = template.querySelector("#points-text");
+                const codeText = template.querySelector("#code-text");
+
+                pointsText.innerText = `${code.points} 點`;
+                codeText.innerText = code.codeId;
+
+                img.onload = resolve;
+                img.src = qrUrl;
+            });
+
+            // Capture
+            const canvas = await html2canvas(template, {
+                useCORS: true,
+                backgroundColor: null,
+                scale: 2 // High res
+            });
+
+            const blob = await new Promise(resolve => canvas.toBlob(resolve));
+            folder.file(`${code.codeId}.png`, blob);
+
+            setProgress(`正在打包圖片 (${i + 1}/${codes.length})...`);
+        }
+
+        // Hide template again
+        template.style.display = "none";
+
+        const content = await zip.generateAsync({ type: "blob" });
+        saveAs(content, `wawag_qrcodes_${new Date().getTime()}.zip`);
+        toast.success(`成功產生並下載 ${codes.length} 組代碼！`);
     };
 
     const handleDelete = async (id) => {
@@ -99,7 +175,7 @@ export default function AdminQRCodePage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Generator Section */}
                 <Card className="lg:col-span-1 bg-white/80 border-white/50 backdrop-blur-xl shadow-xl h-fit">
-                    <h3 className="text-xl font-bold text-wawag-purple mb-4">新代碼</h3>
+                    <h3 className="text-xl font-bold text-wawag-purple mb-4">產生代碼</h3>
                     <form onSubmit={handleGenerate} className="space-y-4">
                         <div>
                             <label className="block text-sm font-bold text-gray-600 mb-1">點數價值</label>
@@ -111,16 +187,55 @@ export default function AdminQRCodePage() {
                                 className="font-mono text-lg"
                             />
                         </div>
+                        <div>
+                            <label className="block text-sm font-bold text-gray-600 mb-1">產生數量 (1-99)</label>
+                            <Input
+                                type="number"
+                                min="1"
+                                max="99"
+                                value={count}
+                                onChange={(e) => setCount(e.target.value)}
+                                className="font-mono text-lg"
+                            />
+                        </div>
                         <Button
                             type="submit"
                             className="w-full bg-wawag-pink hover:bg-pink-400 text-white shadow-lg shadow-pink-200"
                             disabled={loading}
                         >
-                            {loading ? "產生中..." : "產生 QR Code ✨"}
+                            {loading ? (progress || "處理中...") : (count > 1 ? `批量產生 ${count} 組並下載 📦` : "產生 QR Code ✨")}
                         </Button>
                     </form>
 
-                    {generatedCode && (
+                    {/* Hidden Template for html2canvas */}
+                    <div
+                        style={{ position: "absolute", left: "-9999px", top: 0 }}
+                    >
+                        <div
+                            ref={templateRef}
+                            id="qr-template"
+                            className="w-[300px] h-[300px] bg-wawag-cream rounded-[30px] border-4 border-dashed border-wawag-yellow flex flex-col items-center justify-center p-4"
+                            style={{ display: "none" }} // Controlled by JS
+                        >
+                            <div className="bg-white p-3 rounded-2xl shadow-sm mb-4">
+                                <img
+                                    id="qr-img"
+                                    src=""
+                                    alt="QR Code"
+                                    className="w-32 h-32"
+                                    crossOrigin="anonymous"
+                                />
+                            </div>
+                            <div className="text-center">
+                                <div id="points-text" className="text-4xl font-black text-wawag-purple mb-2">100 點</div>
+                                <div id="code-text" className="font-mono text-sm text-gray-500 bg-white px-3 py-1 rounded-full border border-gray-200">
+                                    WAWAG-CODE
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {generatedCode && !loading && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
