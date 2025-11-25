@@ -14,6 +14,9 @@ export default function GiftsPage() {
     const [loading, setLoading] = useState(true);
     const [userPoints, setUserPoints] = useState(0);
 
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [redeemedGift, setRedeemedGift] = useState(null);
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -65,8 +68,16 @@ export default function GiftsPage() {
             const data = await res.json();
 
             if (res.ok) {
-                toast.success("兌換成功！已放入背包 🎒", { id: toastId });
-                router.push("/inventory");
+                toast.dismiss(toastId);
+                setRedeemedGift(gift);
+                setShowSuccessModal(true);
+                // Update local stock if needed, or just let it refresh on next visit
+                // Optimistic update for better UX
+                setGifts(prev => prev.map(g =>
+                    g.id === gift.id && g.stock !== undefined
+                        ? { ...g, stock: g.stock - 1 }
+                        : g
+                ));
             } else {
                 toast.error(data.error || "兌換失敗", { id: toastId });
             }
@@ -76,7 +87,7 @@ export default function GiftsPage() {
     };
 
     return (
-        <div className="space-y-6 pb-24">
+        <div className="space-y-6 pb-24 relative">
             <header>
                 <h2 className="text-3xl font-black text-wawag-dark">點數兌換 🎁</h2>
                 <p className="text-gray-500 font-medium">用您的點數換取精美禮品</p>
@@ -99,15 +110,24 @@ export default function GiftsPage() {
                                     <div className="absolute top-3 right-3 bg-white/90 backdrop-blur text-wawag-pink px-3 py-1 rounded-full text-sm font-black shadow-sm">
                                         {gift.cost.toLocaleString()} 點
                                     </div>
+                                    {gift.stock !== undefined && (
+                                        <div className="absolute bottom-3 left-3 bg-black/50 backdrop-blur text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                                            剩餘: {gift.stock}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="p-5 flex flex-col flex-1">
                                     <h3 className="text-xl font-bold text-gray-800 mb-2">{gift.name}</h3>
                                     <div className="mt-auto pt-4">
                                         <Button
-                                            className="w-full bg-wawag-blue text-white hover:bg-blue-400 shadow-blue-200 shadow-lg"
+                                            className={`w-full text-white shadow-lg ${gift.stock !== undefined && gift.stock <= 0
+                                                    ? "bg-gray-300 cursor-not-allowed shadow-none"
+                                                    : "bg-wawag-blue hover:bg-blue-400 shadow-blue-200"
+                                                }`}
+                                            disabled={gift.stock !== undefined && gift.stock <= 0}
                                             onClick={() => handleRedeem(gift)}
                                         >
-                                            立即兌換
+                                            {gift.stock !== undefined && gift.stock <= 0 ? "已兌換完畢" : "立即兌換"}
                                         </Button>
                                     </div>
                                 </div>
@@ -122,6 +142,56 @@ export default function GiftsPage() {
                     )}
                 </div>
             )}
+
+            {/* Success Modal */}
+            <AnimatePresence>
+                {showSuccessModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.5, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.5, opacity: 0 }}
+                            className="bg-white rounded-3xl p-8 shadow-2xl max-w-sm w-full text-center relative overflow-hidden"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-b from-wawag-yellow/20 to-transparent pointer-events-none" />
+
+                            <motion.div
+                                animate={{ rotate: [0, 10, -10, 0] }}
+                                transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
+                                className="text-6xl mb-4 relative z-10"
+                            >
+                                🎁
+                            </motion.div>
+
+                            <h2 className="text-2xl font-black text-wawag-purple mb-2 relative z-10">兌換成功！</h2>
+                            <p className="text-gray-500 font-medium mb-6 relative z-10">
+                                您已獲得 <span className="text-wawag-pink font-bold">{redeemedGift?.name}</span>
+                            </p>
+
+                            <div className="flex gap-3 relative z-10">
+                                <Button
+                                    variant="secondary"
+                                    className="flex-1"
+                                    onClick={() => setShowSuccessModal(false)}
+                                >
+                                    繼續兌換
+                                </Button>
+                                <Button
+                                    className="flex-1 bg-wawag-blue text-white hover:bg-blue-400"
+                                    onClick={() => router.push("/inventory")}
+                                >
+                                    查看背包
+                                </Button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

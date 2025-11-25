@@ -26,7 +26,7 @@ export async function POST(request) {
             return NextResponse.json({ error: "權限不足" }, { status: 403 });
         }
 
-        const { name, cost, imageUrl } = await request.json();
+        const { name, cost, imageUrl, stock } = await request.json();
 
         if (!name || !cost || !imageUrl) {
             return NextResponse.json({ error: "請填寫所有欄位" }, { status: 400 });
@@ -35,6 +35,7 @@ export async function POST(request) {
         const giftData = {
             name,
             cost: parseInt(cost),
+            stock: parseInt(stock || 0),
             imageUrl,
             createdBy: userInfo.uid,
             createdAt: new Date().toISOString()

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { verifyIdToken, getDocument, updateDocument, createDocument } from "@/lib/firestoreRest";
+import { verifyIdToken, getDocument, updateDocument, createDocument, runTransaction } from "@/lib/firestoreRest";
 
 export const runtime = 'edge';
 
@@ -23,58 +23,54 @@ export async function POST(request) {
             return NextResponse.json({ error: "無效的 Gift ID" }, { status: 400 });
         }
 
-        // 1. Get Gift Details
-        const giftDoc = await getDocument("gifts", giftId, token);
-        if (!giftDoc) {
-            return NextResponse.json({ error: "禮物不存在" }, { status: 404 });
-        }
-        const giftCost = giftDoc.fields.cost ? parseInt(giftDoc.fields.cost.integerValue || giftDoc.fields.cost.stringValue) : 0;
-        const giftName = giftDoc.fields.name ? giftDoc.fields.name.stringValue : "Unknown Gift";
-        const giftImage = giftDoc.fields.imageUrl ? giftDoc.fields.imageUrl.stringValue : "";
+        // Use Transaction for atomic update
+        await runTransaction(token, async (transaction) => {
+            // 1. Get Gift
+            const giftDoc = await transaction.get("gifts", giftId);
+            if (!giftDoc.exists) throw new Error("禮物不存在");
 
-        // 2. Get User Details (Points)
-        const userDoc = await getDocument("users", userInfo.uid, token);
-        if (!userDoc) {
-            return NextResponse.json({ error: "使用者不存在" }, { status: 404 });
-        }
+            const cost = Number(giftDoc.data.cost || 0);
+            const stock = giftDoc.data.stock !== undefined ? Number(giftDoc.data.stock) : null; // null means unlimited
 
-        // Handle different number types from Firestore (integer or double)
-        let currentPoints = 0;
-        if (userDoc.fields.points) {
-            currentPoints = parseInt(userDoc.fields.points.integerValue || userDoc.fields.points.doubleValue || 0);
-        } else if (userDoc.fields.totalPointsEarned) {
-            // Fallback if points field is missing but totalPointsEarned exists (though points should be the balance)
-            // Actually, we should rely on 'points' field for balance.
-            currentPoints = parseInt(userDoc.fields.totalPointsEarned.integerValue || 0);
-        }
+            if (stock !== null && stock <= 0) {
+                throw new Error("禮物已兌換完畢");
+            }
 
-        if (currentPoints < giftCost) {
-            return NextResponse.json({ error: "點數不足" }, { status: 400 });
-        }
+            // 2. Get User
+            const userDoc = await transaction.get("users", userInfo.uid);
+            if (!userDoc.exists) throw new Error("使用者不存在");
 
-        // 3. Deduct Points
-        const newPoints = currentPoints - giftCost;
-        await updateDocument("users", userInfo.uid, {
-            points: newPoints,
-            updatedAt: new Date()
-        }, token);
+            const currentPoints = Number(userDoc.data.points || 0);
 
-        // 4. Add to Inventory (Sub-collection or separate collection?)
-        // Let's use a root collection 'inventory' with userId field, or a subcollection.
-        // Firestore REST API makes subcollections a bit verbose to address sometimes, but let's try root collection 'inventory'
-        // Structure: inventory/{id} -> { userId, giftId, name, imageUrl, redeemedAt }
+            if (currentPoints < cost) {
+                throw new Error("點數不足");
+            }
 
-        const inventoryItem = {
-            userId: userInfo.uid,
-            giftId: giftId,
-            name: giftName,
-            imageUrl: giftImage,
-            redeemedAt: new Date().toISOString()
-        };
+            // 3. Update User Points
+            transaction.update("users", userInfo.uid, {
+                points: currentPoints - cost,
+                updatedAt: new Date()
+            });
 
-        await createDocument("inventory", inventoryItem, token);
+            // 4. Update Gift Stock
+            if (stock !== null) {
+                transaction.update("gifts", giftId, {
+                    stock: stock - 1
+                });
+            }
 
-        return NextResponse.json({ success: true, remainingPoints: newPoints });
+            // 5. Create Inventory Item
+            const inventoryId = crypto.randomUUID();
+            transaction.create("inventory", inventoryId, {
+                userId: userInfo.uid,
+                giftId: giftId,
+                name: giftDoc.data.name,
+                imageUrl: giftDoc.data.imageUrl,
+                redeemedAt: new Date().toISOString()
+            });
+        });
+
+        return NextResponse.json({ success: true });
 
     } catch (error) {
         console.error("Redeem Gift Error:", error);

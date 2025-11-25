@@ -87,6 +87,7 @@ export default function AdminGiftsPage() {
                 body: JSON.stringify({
                     name: newGift.name,
                     cost: newGift.cost,
+                    stock: newGift.stock,
                     imageUrl
                 })
             });
@@ -182,6 +183,15 @@ export default function AdminGiftsPage() {
                                         placeholder="e.g. 500"
                                     />
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-600 mb-1 ml-1">庫存數量 (選填)</label>
+                                    <Input
+                                        type="number"
+                                        value={newGift.stock || ""}
+                                        onChange={(e) => setNewGift({ ...newGift, stock: e.target.value })}
+                                        placeholder="留空代表無限"
+                                    />
+                                </div>
                                 <div className="flex gap-3 mt-6">
                                     <Button type="button" variant="secondary" className="flex-1" onClick={() => setShowAddModal(false)}>取消</Button>
                                     <Button type="submit" disabled={uploading} className="flex-1 bg-wawag-blue text-white hover:bg-blue-400">
@@ -210,6 +220,11 @@ export default function AdminGiftsPage() {
                             <div className="absolute top-2 right-2 bg-black/50 text-white px-2 py-1 rounded-lg text-xs font-bold backdrop-blur-md">
                                 {gift.cost.toLocaleString()} 點
                             </div>
+                            {gift.stock !== undefined && (
+                                <div className="absolute bottom-2 left-2 bg-black/50 text-white px-2 py-1 rounded-lg text-xs font-bold backdrop-blur-md">
+                                    庫存: {gift.stock}
+                                </div>
+                            )}
                         </div>
                         <div className="p-4 flex justify-between items-center">
                             <div className="font-bold text-gray-800">{gift.name}</div>
