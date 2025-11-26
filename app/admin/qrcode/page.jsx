@@ -13,6 +13,7 @@ export default function AdminQRCodePage() {
     const { user } = useAuth();
     const [points, setPoints] = useState(100);
     const [count, setCount] = useState(1);
+    const [prefix, setPrefix] = useState("WAWAG");
     const [loading, setLoading] = useState(false);
     const [progress, setProgress] = useState("");
     const [generatedCode, setGeneratedCode] = useState(null); // For single display
@@ -53,7 +54,8 @@ export default function AdminQRCodePage() {
                 },
                 body: JSON.stringify({
                     points: Number(points),
-                    count: Number(count)
+                    count: Number(count),
+                    prefix: prefix || "WAWAG"
                 }),
             });
 
@@ -185,6 +187,15 @@ export default function AdminQRCodePage() {
                                 value={points}
                                 onChange={(e) => setPoints(e.target.value)}
                                 className="font-mono text-lg"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-gray-600 mb-1">代碼前綴</label>
+                            <Input
+                                value={prefix}
+                                onChange={(e) => setPrefix(e.target.value.toUpperCase())}
+                                placeholder="WAWAG"
+                                className="font-mono text-lg uppercase"
                             />
                         </div>
                         <div>

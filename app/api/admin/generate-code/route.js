@@ -28,7 +28,7 @@ export async function POST(request) {
 
         // 2. Parse Body
         const body = await request.json();
-        const { points, count = 1 } = body;
+        const { points, count = 1, prefix = "WAWAG" } = body;
 
         if (!points || typeof points !== 'number' || points <= 0) {
             return NextResponse.json({ error: "無效的點數數值" }, { status: 400 });
@@ -39,7 +39,13 @@ export async function POST(request) {
         }
 
         const generateOne = async () => {
-            const codeId = `WAWAG-${globalThis.crypto.randomUUID().split('-')[0].toUpperCase()}`;
+            // Generate 10 random characters
+            const randomSuffix = Array.from(crypto.getRandomValues(new Uint8Array(5)))
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('')
+                .toUpperCase();
+
+            const codeId = `${prefix.toUpperCase()}-${randomSuffix}`;
             const docData = {
                 codeId,
                 points,
