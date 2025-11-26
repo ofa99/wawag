@@ -103,7 +103,7 @@ export default function ScanPage() {
                     "Authorization": `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    codeId: cleanCode,
+                    code: cleanCode,
                     uid: auth.currentUser?.uid
                 })
             });
