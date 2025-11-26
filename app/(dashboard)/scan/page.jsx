@@ -95,9 +95,13 @@ export default function ScanPage() {
 
             console.log("Scanned code:", code, "Cleaned code:", cleanCode);
 
+            const token = await auth.currentUser.getIdToken();
             const res = await fetch("/api/claim-code", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     codeId: cleanCode,
                     uid: auth.currentUser?.uid
